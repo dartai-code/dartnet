@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DartNet - Games</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0a0a1a">
+</head>
+<body>
+  <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="/images/logo.jpeg" alt="DartNet">
+        <h2>DARTNET</h2>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item" href="/dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a class="nav-item" href="/spin.html"><i class="fas fa-dharmachakra"></i> Spin Wheel</a>
+        <a class="nav-item active" href="/games.html"><i class="fas fa-gamepad"></i> Games</a>
+        <a class="nav-item" href="/tasks.html"><i class="fas fa-tasks"></i> Tasks</a>
+        <a class="nav-item" href="/leaderboard.html"><i class="fas fa-trophy"></i> Leaderboard</a>
+        <a class="nav-item" href="/referral.html"><i class="fas fa-user-friends"></i> Referral</a>
+        <a class="nav-item" href="/wallet.html"><i class="fas fa-wallet"></i> Wallet</a>
+        <a class="nav-item" href="/about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a class="nav-item" href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+        <a class="nav-item" href="/terms.html"><i class="fas fa-file-contract"></i> Terms & Conditions</a>
+        <a class="nav-item" href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
+        <a class="nav-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">U</div>
+          <div class="user-details">
+            <div class="name">User</div>
+            <div class="level">Level 1</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1><i class="fas fa-gamepad"></i> Mini Games</h1>
+        <p>Play games to earn points! Ad shown after every 4 levels.</p>
+      </div>
+
+      <!-- Campaign Announcements Ticker -->
+      <div id="campaignTicker" style="display:none; background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(74,222,128,.1)); border:1px solid rgba(251,191,36,.2); border-radius:12px; padding:10px 16px; margin-bottom:16px; overflow:hidden; position:relative;">
+        <div style="font-size:11px;font-weight:700;color:#facc15;margin-bottom:6px;letter-spacing:1px"><i class="fas fa-bullhorn"></i> CAMPAIGN WINNERS</div>
+        <div id="tickerContent" style="font-size:13px;color:#e2e8f0;line-height:1.8"></div>
+      </div>
+
+      <div class="games-grid" id="gamesGrid">
+        <!-- Game cards rendered here -->
+      </div>
+
+      <!-- Game Modal -->
+      <div class="modal-overlay" id="gameModal">
+        <div class="modal" style="max-width: 600px; max-height: 90vh;">
+          <div class="flex-between mb-2">
+            <h2 id="gameTitle">Game</h2>
+            <button class="btn btn-secondary btn-small" onclick="closeGame()">
+              <i class="fas fa-times"></i> Close
+            </button>
+          </div>
+          <div id="gameArea" style="min-height: 400px;">
+            <!-- Game rendered here -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+
+    // Game definitions (structure - games to be decided later)
+    const GAMES = [
+      {
+        id: 'tap-master',
+        title: 'Tap Master',
+        description: 'Tap as fast as you can! Earn points for each tap.',
+        icon: '👆',
+        reward: 'Up to 15 pts',
+        gradient: 'linear-gradient(135deg, #1a1a4e, #2a1a6e)',
+        available: true
+      },
+      {
+        id: 'quiz-time',
+        title: 'Quiz Time',
+        description: 'Answer questions correctly to earn points!',
+        icon: '🧠',
+        reward: 'Up to 30 pts',
+        gradient: 'linear-gradient(135deg, #1a3a1a, #1a4a2a)',
+        available: true
+      },
+      {
+        id: 'memory-match',
+        title: 'Memory Match',
+        description: 'Match the pairs! Test your memory.',
+        icon: '🃏',
+        reward: 'Up to 24 pts',
+        gradient: 'linear-gradient(135deg, #3a1a1a, #4a1a2a)',
+        available: true
+      },
+      {
+        id: 'run-for-life',
+        title: 'Run For Life',
+        description: 'Troll platformer! 10 insane levels of traps, fake exits & trolling.',
+        icon: '💀',
+        reward: 'Up to 90 pts',
+        gradient: 'linear-gradient(135deg, #1a0a2a, #3a1a4a)',
+        available: true,
+        fullPage: true
+      },
+      {
+        id: 'shatter',
+        title: 'Shatter',
+        description: 'Aim, shoot & destroy blocks! 30 levels of brick-breaking action.',
+        icon: '🔮',
+        reward: 'Up to 60 pts',
+        gradient: 'linear-gradient(135deg, #1a1a4e, #2a1a5e)',
+        available: true,
+        fullPage: true
+      },
+      {
+        id: 'stack-tower',
+        title: 'Stack Tower',
+        description: 'Tap to stack sliding blocks. How high can you go?',
+        icon: '🏗️',
+        reward: 'Up to 60 pts',
+        gradient: 'linear-gradient(135deg, #1a2a1a, #2a4a2a)',
+        available: true,
+        fullPage: true
+      },
+      {
+        id: 'color-switch',
+        title: 'Color Switch',
+        description: 'Jump through matching color gates! Fast reflexes needed.',
+        icon: '🎨',
+        reward: 'Up to 60 pts',
+        gradient: 'linear-gradient(135deg, #2a1a3a, #4a1a5a)',
+        available: true,
+        fullPage: true
+      },
+      {
+        id: '2048',
+        title: 'Merge Mania',
+        description: 'Swipe to merge tiles and reach 2048! Classic puzzle.',
+
+        icon: '🧩',
+        reward: 'Up to 60 pts',
+        gradient: 'linear-gradient(135deg, #3a2a1a, #5a3a1a)',
+        available: true,
+        fullPage: true
+      },
+      {
+        id: 'flappy-jump',
+        title: 'Flappy Jump',
+        description: 'Tap to fly through pipes. Don\'t crash!',
+        icon: '🐦',
+        reward: 'Up to 60 pts',
+        gradient: 'linear-gradient(135deg, #1a3a2a, #1a4a3a)',
+        available: true,
+        fullPage: true
+      },
+      {
+        id: 'word-scramble',
+        title: 'Word Scramble',
+        description: 'Unscramble letters to form words before time runs out!',
+        icon: '📝',
+        reward: 'Up to 60 pts',
+        gradient: 'linear-gradient(135deg, #2a1a4a, #3a2a5a)',
+        available: true,
+        fullPage: true
+      },
+      {
+        id: 'snake-evolve',
+        title: 'Snake Evolve',
+        description: 'Eat, evolve & dominate! Kill AI snakes, grow from Worm to Dragon.',
+        icon: '🐉',
+        reward: 'Up to 90 pts',
+        gradient: 'linear-gradient(135deg, #0a2a0a, #1a4a1a)',
+        available: true,
+        fullPage: true
+      }
+    ];
+
+    // Campaign badge data (matches backend GAME_CAMPAIGNS)
+    const CAMPAIGN_INFO = {
+      'shatter':       { goal: 'Clear Level 30', dollars: 5 },
+      'stack-tower':   { goal: 'Stack 30+ blocks', dollars: 3 },
+      'color-switch':  { goal: 'Collect 20+ stars', dollars: 3 },
+      '2048':          { goal: 'Score 20,000+', dollars: 5 },
+      'flappy-jump':   { goal: 'Pass 30+ pipes', dollars: 3 },
+      'word-scramble': { goal: 'Solve all 10 words', dollars: 4 }
+    };
+    let claimedCampaigns = {};
+
+    // Render game cards
+    function renderGames() {
+      const grid = document.getElementById('gamesGrid');
+      grid.innerHTML = GAMES.map(g => {
+        const camp = CAMPAIGN_INFO[g.id];
+        const claimed = claimedCampaigns[g.id];
+        let badge = '';
+        if (camp) {
+          badge = '<div style=\"margin-top:6px;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.5px;' +
+            (claimed ? 'background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.2)\">\u2705 $' + camp.dollars + ' Claimed this month'
+                     : 'background:rgba(251,191,36,.12);color:#facc15;border:1px solid rgba(251,191,36,.2)\">\uD83C\uDFC6 $' + camp.dollars + ' \u2014 ' + camp.goal) + '</div>';
+        }
+        return `
+        <div class="game-card ${g.available ? '' : 'disabled'}" onclick="${g.available ? `openGame('${g.id}')` : ''}">
+          <div class="game-thumb" style="background: ${g.gradient}">${g.icon}</div>
+          <div class="game-info">
+            <h3>${g.title}</h3>
+            <p>${g.description}</p>
+            <span class="game-reward"><i class="fas fa-coins"></i> ${g.reward}</span>
+            ${badge}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // Load campaign claim status then re-render cards
+    async function loadCampaignStatus() {
+      try {
+        const data = await api('/api/campaign-status');
+        if (data && data.campaigns) {
+          for (const [gid, c] of Object.entries(data.campaigns)) {
+            if (c.claimed) claimedCampaigns[gid] = true;
+          }
+          renderGames();
+        }
+      } catch(e) {}
+    }
+
+    // ========================
+    // TAP MASTER GAME
+    // ========================
+    function tapMasterGame() {
+      let taps = 0;
+      let timeLeft = 15;
+      let timer;
+
+      return `
+        <div style="text-align: center; padding: 20px;">
+          <p class="text-dim">Tap the button as many times as you can in 15 seconds!</p>
+          <div style="font-size: 48px; font-family: Orbitron; color: var(--accent); margin: 20px 0;" id="tapCount">0</div>
+          <div style="font-size: 18px; color: var(--warning); margin-bottom: 20px;" id="tapTimer">15s</div>
+          <button class="btn btn-primary" id="tapBtn" style="width: 200px; height: 200px; border-radius: 50%; font-size: 40px;" onclick="handleTap()">
+            👆
+          </button>
+          <div id="tapResult" class="mt-2"></div>
+        </div>
+      `;
+    }
+
+    let tapState = { taps: 0, timer: null, timeLeft: 15, started: false };
+
+    window.handleTap = function() {
+      if (!tapState.started) {
+        tapState.started = true;
+        tapState.timer = setInterval(() => {
+          tapState.timeLeft--;
+          document.getElementById('tapTimer').textContent = tapState.timeLeft + 's';
+          if (tapState.timeLeft <= 0) {
+            clearInterval(tapState.timer);
+            document.getElementById('tapBtn').disabled = true;
+            const points = Math.min(15, Math.floor(tapState.taps / 7));
+            document.getElementById('tapResult').innerHTML = `
+              <p style="font-size: 24px; color: var(--accent);">🎉 ${tapState.taps} taps! +${points} points</p>
+              <button class="btn btn-primary btn-small mt-1" onclick="submitGameScore('tap-master', ${tapState.taps}, 1, ${points})">Claim Points</button>
+            `;
+          }
+        }, 1000);
+      }
+      tapState.taps++;
+      document.getElementById('tapCount').textContent = tapState.taps;
+    };
+
+    // ========================
+    // QUIZ GAME
+    // ========================
+    const QUIZ_QUESTIONS = [
+      { q: 'What is the largest planet in our solar system?', options: ['Mars', 'Jupiter', 'Saturn', 'Neptune'], answer: 1 },
+      { q: 'What does HTML stand for?', options: ['Hyper Text Markup Language', 'High Tech Modern Language', 'Hyper Transfer Markup Language', 'Home Tool Markup Language'], answer: 0 },
+      { q: 'What year was Bitcoin created?', options: ['2007', '2008', '2009', '2010'], answer: 2 },
+      { q: 'Which country has the most people?', options: ['USA', 'China', 'India', 'Brazil'], answer: 2 },
+      { q: 'What is 15 x 8?', options: ['110', '120', '130', '140'], answer: 1 },
+      { q: 'Which blockchain uses Proof of Stake?', options: ['Bitcoin', 'Ethereum', 'Both', 'Neither'], answer: 1 },
+      { q: 'What is the chemical symbol for Gold?', options: ['Go', 'Gd', 'Au', 'Ag'], answer: 2 },
+      { q: 'How many bytes in a kilobyte?', options: ['100', '512', '1000', '1024'], answer: 3 },
+    ];
+
+    let quizState = { current: 0, correct: 0, questions: [] };
+
+    function quizGame() {
+      // Shuffle and pick 5 questions
+      quizState = { current: 0, correct: 0, questions: [...QUIZ_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 5) };
+      return `
+        <div id="quizArea" style="padding: 20px;">
+          <div class="flex-between mb-2">
+            <span class="text-dim" id="quizProgress">Question 1/5</span>
+            <span style="color: var(--accent);" id="quizScore">Score: 0</span>
+          </div>
+          <div id="quizQuestion"></div>
+        </div>
+      `;
+    }
+
+    function renderQuizQuestion() {
+      const q = quizState.questions[quizState.current];
+      if (!q) {
+        // Quiz done
+        const points = quizState.correct * 6;
+        document.getElementById('quizQuestion').innerHTML = `
+          <div class="text-center">
+            <p style="font-size: 48px; margin-bottom: 12px;">🎉</p>
+            <p style="font-size: 20px; color: var(--accent);">Quiz Complete!</p>
+            <p class="text-dim mt-1">${quizState.correct}/5 correct — +${points} points</p>
+            <button class="btn btn-primary btn-small mt-2" onclick="submitGameScore('quiz-time', ${quizState.correct}, 1, ${points})">Claim Points</button>
+          </div>
+        `;
+        return;
+      }
+
+      document.getElementById('quizProgress').textContent = `Question ${quizState.current + 1}/5`;
+
+      document.getElementById('quizQuestion').innerHTML = `
+        <h3 style="margin-bottom: 16px; line-height: 1.5;">${q.q}</h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          ${q.options.map((opt, i) => `
+            <button class="btn btn-secondary" style="text-align: left; padding: 14px 18px;" onclick="answerQuiz(${i})">${opt}</button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    window.answerQuiz = function(idx) {
+      const q = quizState.questions[quizState.current];
+      if (idx === q.answer) {
+        quizState.correct++;
+        document.getElementById('quizScore').textContent = `Score: ${quizState.correct}`;
+        showToast('✅ Correct!', 'success');
+      } else {
+        showToast('❌ Wrong!', 'error');
+      }
+      quizState.current++;
+      setTimeout(renderQuizQuestion, 500);
+    };
+
+    // ========================
+    // MEMORY MATCH GAME
+    // ========================
+    let memoryState = { cards: [], flipped: [], matched: [], moves: 0 };
+
+    function memoryGame() {
+      const emojis = ['🎮', '🎲', '🎯', '🏆', '💎', '🚀', '⭐', '🔥'];
+      const deck = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+      memoryState = { cards: deck, flipped: [], matched: [], moves: 0 };
+
+      return `
+        <div style="padding: 20px;">
+          <div class="flex-between mb-2">
+            <span class="text-dim" id="memMoves">Moves: 0</span>
+            <span class="text-dim" id="memPairs">Pairs: 0/8</span>
+          </div>
+          <div id="memGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 400px; margin: 0 auto;"></div>
+          <div id="memResult" class="mt-2 text-center"></div>
+        </div>
+      `;
+    }
+
+    function renderMemoryGrid() {
+      const grid = document.getElementById('memGrid');
+      grid.innerHTML = memoryState.cards.map((card, i) => {
+        const isFlipped = memoryState.flipped.includes(i) || memoryState.matched.includes(i);
+        return `
+          <div onclick="flipCard(${i})" style="
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: ${isFlipped ? 'var(--bg-card)' : 'linear-gradient(135deg, var(--accent2), var(--accent))'};
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            ${memoryState.matched.includes(i) ? 'opacity: 0.5;' : ''}
+          ">${isFlipped ? card : '?'}</div>
+        `;
+      }).join('');
+    }
+
+    window.flipCard = function(idx) {
+      if (memoryState.flipped.length >= 2 || memoryState.flipped.includes(idx) || memoryState.matched.includes(idx)) return;
+
+      memoryState.flipped.push(idx);
+      renderMemoryGrid();
+
+      if (memoryState.flipped.length === 2) {
+        memoryState.moves++;
+        document.getElementById('memMoves').textContent = `Moves: ${memoryState.moves}`;
+
+        const [a, b] = memoryState.flipped;
+        if (memoryState.cards[a] === memoryState.cards[b]) {
+          memoryState.matched.push(a, b);
+          memoryState.flipped = [];
+          document.getElementById('memPairs').textContent = `Pairs: ${memoryState.matched.length / 2}/8`;
+
+          if (memoryState.matched.length === 16) {
+            const points = Math.max(3, 24 - Math.floor(memoryState.moves * 0.3));
+            document.getElementById('memResult').innerHTML = `
+              <p style="font-size: 24px; color: var(--accent);">🎉 All matched in ${memoryState.moves} moves!</p>
+              <p class="text-dim">+${points} points</p>
+              <button class="btn btn-primary btn-small mt-1" onclick="submitGameScore('memory-match', ${16 - memoryState.moves}, 1, ${points})">Claim Points</button>
+            `;
+          }
+        } else {
+          setTimeout(() => {
+            memoryState.flipped = [];
+            renderMemoryGrid();
+          }, 800);
+        }
+      }
+    };
+
+    // ========================
+    // COMMON
+    // ========================
+
+    function openGame(gameId) {
+      const game = GAMES.find(g => g.id === gameId);
+      if (!game || !game.available) return;
+
+      if (game.fullPage) {
+        window.location.href = '/' + gameId + '.html';
+        return;
+      }
+
+      document.getElementById('gameTitle').textContent = game.title;
+      document.getElementById('gameModal').classList.add('active');
+
+      let html = '';
+      switch (gameId) {
+        case 'tap-master':
+          tapState = { taps: 0, timer: null, timeLeft: 15, started: false };
+          html = tapMasterGame();
+          break;
+        case 'quiz-time':
+          html = quizGame();
+          break;
+        case 'memory-match':
+          html = memoryGame();
+          break;
+      }
+
+      document.getElementById('gameArea').innerHTML = html;
+
+      // Post-render init
+      if (gameId === 'quiz-time') setTimeout(renderQuizQuestion, 100);
+      if (gameId === 'memory-match') setTimeout(renderMemoryGrid, 100);
+    }
+
+    function closeGame() {
+      if (tapState.timer) clearInterval(tapState.timer);
+      document.getElementById('gameModal').classList.remove('active');
+    }
+
+    async function submitGameScore(gameId, score, levels, points) {
+      try {
+        await api('/api/games/score', {
+          method: 'POST',
+          body: JSON.stringify({ gameId, score, levelsCompleted: levels, pointsEarned: points })
+        });
+        showToast(`+${points} points earned!`, 'success');
+        closeGame();
+      } catch (err) {
+        // Already handled
+      }
+    }
+
+    // Init
+    renderGames();
+    loadCampaignStatus();
+    updateSidebarUser();
+    loadCampaignAnnouncements();
+
+    // Load and show campaign announcements ticker
+    async function loadCampaignAnnouncements() {
+      try {
+        const data = await api('/api/campaign-announcements');
+        if (!data.announcements || data.announcements.length === 0) return;
+        var ticker = document.getElementById('campaignTicker');
+        var content = document.getElementById('tickerContent');
+        var html = data.announcements.map(function(a) {
+          return '<div>\uD83C\uDFC6 <strong>' + a.username + '</strong> cleared <strong>' + a.game_title + '</strong> campaign and won <span style="color:#4ade80;font-weight:700">$' + a.reward_dollars + '</span>!</div>';
+        }).join('');
+        content.innerHTML = html;
+        ticker.style.display = 'block';
+      } catch(e) {}
+    }
+  </script>
+  <script src="/js/install-popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DartNet - Spin Wheel</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0a0a1a">
+</head>
+<body>
+  <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="/images/logo.jpeg" alt="DartNet">
+        <h2>DARTNET</h2>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item" href="/dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a class="nav-item active" href="/spin.html"><i class="fas fa-dharmachakra"></i> Spin Wheel</a>
+        <a class="nav-item" href="/games.html"><i class="fas fa-gamepad"></i> Games</a>
+        <a class="nav-item" href="/tasks.html"><i class="fas fa-tasks"></i> Tasks</a>
+        <a class="nav-item" href="/leaderboard.html"><i class="fas fa-trophy"></i> Leaderboard</a>
+        <a class="nav-item" href="/referral.html"><i class="fas fa-user-friends"></i> Referral</a>
+        <a class="nav-item" href="/wallet.html"><i class="fas fa-wallet"></i> Wallet</a>
+        <a class="nav-item" href="/about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a class="nav-item" href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+        <a class="nav-item" href="/terms.html"><i class="fas fa-file-contract"></i> Terms & Conditions</a>
+        <a class="nav-item" href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
+        <a class="nav-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">U</div>
+          <div class="user-details">
+            <div class="name">User</div>
+            <div class="level">Level 1</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1><i class="fas fa-dharmachakra"></i> Spin Wheel</h1>
+        <p>Spin to win points! 1 free spin daily + extra spins by watching ads.</p>
+      </div>
+
+      <div class="card">
+        <div class="spin-container">
+          <div class="wheel-wrapper">
+            <div class="wheel-pointer"></div>
+            <canvas id="wheelCanvas" class="wheel-canvas" width="600" height="600"></canvas>
+          </div>
+
+          <div class="spin-result" id="spinResult"></div>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+            <button class="btn btn-primary spin-btn" id="freeSpinBtn" onclick="doSpin('free')">
+              <i class="fas fa-play"></i> Free Spin
+            </button>
+            <button class="btn btn-secondary spin-btn" id="adSpinBtn" onclick="doSpin('ad')">
+              <i class="fas fa-ad"></i> Watch Ad + Spin
+            </button>
+          </div>
+
+          <p class="text-dim mt-2" id="spinStatus"></p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/spin.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+
+    let wheel;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      wheel = new SpinWheel('wheelCanvas');
+      checkSpinStatus();
+    });
+
+    async function checkSpinStatus() {
+      try {
+        const user = await api('/api/me');
+        if (!user) return;
+        setUser(user);
+        updateSidebarUser();
+
+        const today = new Date().toISOString().split('T')[0];
+        const freeUsed = user.last_spin_date === today;
+        const freeBtn = document.getElementById('freeSpinBtn');
+
+        if (freeUsed) {
+          freeBtn.disabled = true;
+          freeBtn.innerHTML = '<i class="fas fa-check"></i> Used Today';
+          document.getElementById('spinStatus').textContent = 'Free spin used. Watch an ad for extra spin!';
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function doSpin(type) {
+      if (wheel.spinning) return;
+
+      const freeBtn = document.getElementById('freeSpinBtn');
+      const adBtn = document.getElementById('adSpinBtn');
+      freeBtn.disabled = true;
+      adBtn.disabled = true;
+
+      document.getElementById('spinResult').textContent = '';
+
+      try {
+        const data = await api('/api/spin', {
+          method: 'POST',
+          body: JSON.stringify({ type })
+        });
+
+        if (!data) return;
+
+        await wheel.spin(data.reward);
+        document.getElementById('spinResult').textContent = `🎉 You won ${data.reward} points!`;
+        showToast(`Won ${data.reward} points!`, 'success');
+
+        checkSpinStatus();
+      } catch (err) {
+        document.getElementById('spinResult').textContent = '';
+      } finally {
+        adBtn.disabled = false;
+        // freeBtn status is handled by checkSpinStatus
+      }
+    }
+  </script>
+  <script src="/js/install-popup.js"></script>
+</body>
+</html>

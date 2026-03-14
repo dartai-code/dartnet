@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DartNet - Tasks</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0a0a1a">
+</head>
+<body>
+  <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="/images/logo.jpeg" alt="DartNet">
+        <h2>DARTNET</h2>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item" href="/dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a class="nav-item" href="/spin.html"><i class="fas fa-dharmachakra"></i> Spin Wheel</a>
+        <a class="nav-item" href="/games.html"><i class="fas fa-gamepad"></i> Games</a>
+        <a class="nav-item active" href="/tasks.html"><i class="fas fa-tasks"></i> Tasks</a>        <a class="nav-item" href="/leaderboard.html"><i class="fas fa-trophy"></i> Leaderboard</a>        <a class="nav-item" href="/referral.html"><i class="fas fa-user-friends"></i> Referral</a>
+        <a class="nav-item" href="/wallet.html"><i class="fas fa-wallet"></i> Wallet</a>
+        <a class="nav-item" href="/about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a class="nav-item" href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+        <a class="nav-item" href="/terms.html"><i class="fas fa-file-contract"></i> Terms & Conditions</a>
+        <a class="nav-item" href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
+        <a class="nav-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">U</div>
+          <div class="user-details">
+            <div class="name">User</div>
+            <div class="level">Level 1</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1><i class="fas fa-tasks"></i> Tasks</h1>
+        <p>Complete tasks to earn points. New tasks added regularly!</p>
+      </div>
+
+      <div class="task-list" id="taskList">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+
+    const TASK_ICONS = {
+      visit: 'fas fa-globe',
+      watch: 'fas fa-play-circle',
+      install: 'fas fa-download',
+      play: 'fas fa-gamepad'
+    };
+
+    async function loadTasks() {
+      try {
+        const tasks = await api('/api/tasks');
+        if (!tasks) return;
+
+        const list = document.getElementById('taskList');
+
+        if (tasks.length === 0) {
+          list.innerHTML = '<div class="text-center text-dim" style="padding: 40px;"><i class="fas fa-clipboard-list" style="font-size: 48px; display: block; margin-bottom: 12px;"></i><p>No tasks available right now. Check back later!</p></div>';
+          return;
+        }
+
+        list.innerHTML = tasks.map(task => {
+          const completed = task.user_status === 'completed';
+          const icon = TASK_ICONS[task.task_type] || 'fas fa-check-circle';
+
+          return `
+            <div class="task-item ${completed ? 'completed' : ''}">
+              <div class="task-icon">
+                <i class="${icon}"></i>
+              </div>
+              <div class="task-details">
+                <h4>${escapeHtml(task.task_title)}</h4>
+                <p>${escapeHtml(task.task_description || '')}</p>
+              </div>
+              <span class="task-reward-badge">+${task.reward_points} pts</span>
+              ${completed
+                ? '<span class="badge badge-approved">Done ✓</span>'
+                : `<button class="btn btn-primary btn-small" onclick="startTask(${task.task_id}, '${escapeHtml(task.task_link)}', ${task.timer_seconds || 30})">Start</button>`
+              }
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    let activeTimer = null;
+
+    async function startTask(taskId, link, seconds) {
+      // Open link in new tab
+      if (link && link !== 'null') {
+        window.open(link, '_blank', 'noopener');
+      }
+
+      // Show timer modal
+      showTaskTimer(taskId, seconds);
+    }
+
+    function showTaskTimer(taskId, totalSeconds) {
+      let remaining = totalSeconds;
+
+      // Create overlay
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay active';
+      overlay.innerHTML = `
+        <div class="modal" style="text-align: center;">
+          <h2><i class="fas fa-clock"></i> Task Verification</h2>
+          <p class="text-dim mb-2">Stay on the task page. Verifying in...</p>
+          <div style="font-family: Orbitron; font-size: 48px; color: var(--accent); margin: 20px 0;" id="taskCountdown">${remaining}s</div>
+          <div class="level-bar" style="margin: 20px 0;">
+            <div class="level-fill" id="taskProgress" style="width: 0%"></div>
+          </div>
+          <p class="text-dim" id="taskTimerStatus">Please wait...</p>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      activeTimer = setInterval(() => {
+        remaining--;
+        const el = document.getElementById('taskCountdown');
+        const bar = document.getElementById('taskProgress');
+
+        if (el) el.textContent = remaining + 's';
+        if (bar) bar.style.width = ((totalSeconds - remaining) / totalSeconds * 100) + '%';
+
+        if (remaining <= 0) {
+          clearInterval(activeTimer);
+          completeTask(taskId, overlay);
+        }
+      }, 1000);
+    }
+
+    async function completeTask(taskId, overlay) {
+      const status = document.getElementById('taskTimerStatus');
+      if (status) status.textContent = 'Verifying...';
+
+      try {
+        const data = await api(`/api/tasks/${taskId}/complete`, { method: 'POST' });
+        if (data) {
+          showToast(`🎉 Task completed! +${data.reward} points`, 'success');
+        }
+      } catch (err) {
+        // Already shown via toast
+      }
+
+      if (overlay) overlay.remove();
+      loadTasks();
+    }
+
+    loadTasks();
+    updateSidebarUser();
+  </script>
+  <script src="/js/install-popup.js"></script>
+</body>
+</html>

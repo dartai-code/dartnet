@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>DartNet - Merge Mania</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <meta name="theme-color" content="#0a0a1a">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a1a; overflow: hidden; touch-action: none; user-select: none; }
+    .t-wrapper {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 100vh; position: relative; padding: 16px;
+    }
+    .t-back {
+      position: fixed; top: 12px; left: 12px; z-index: 20;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+      font-size: 14px; text-decoration: none; transition: background 0.2s;
+    }
+    .t-back:hover { background: rgba(255,255,255,0.15); }
+    .t-header {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; max-width: 380px; margin-bottom: 12px;
+    }
+    .t-title {
+      font-family: 'Orbitron', monospace; font-size: 28px; font-weight: 900;
+      background: linear-gradient(135deg, #ffd93d, #ff6b6b);
+      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .t-scores { display: flex; gap: 10px; }
+    .t-score-box {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 6px 14px; text-align: center; min-width: 75px;
+    }
+    .t-score-label { font-size: 10px; color: #888; letter-spacing: 2px; text-transform: uppercase; }
+    .t-score-val {
+      font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700; color: #fff;
+      transition: transform 0.15s;
+    }
+    .t-score-val.pop { transform: scale(1.15); }
+    .t-board-wrap { position: relative; }
+    .t-board {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; padding: 10px; border-radius: 14px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      width: 100%; max-width: 380px; aspect-ratio: 1/1;
+    }
+    .t-cell {
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace; font-weight: 900;
+      background: rgba(255,255,255,0.03); position: relative;
+      transition: transform 0.12s ease, background 0.12s ease;
+    }
+    .t-cell.pop { animation: tPop 0.2s ease; }
+    @keyframes tPop {
+      0% { transform: scale(0); } 50% { transform: scale(1.15); } 100% { transform: scale(1); }
+    }
+    .t-cell.merge { animation: tMerge 0.2s ease; }
+    @keyframes tMerge {
+      0% { transform: scale(1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); }
+    }
+    .t-new-btn {
+      margin-top: 14px; padding: 10px 30px; font-size: 14px; font-weight: 700;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; border-radius: 50px; cursor: pointer; letter-spacing: 2px;
+      transition: background 0.2s;
+    }
+    .t-new-btn:hover { background: rgba(255,255,255,0.15); }
+
+    /* Overlay */
+    .t-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: none; justify-content: center; align-items: center;
+      z-index: 10; border-radius: 14px;
+      background: rgba(10,10,30,0.88); backdrop-filter: blur(6px);
+    }
+    .t-overlay.active { display: flex; }
+    .t-panel { text-align: center; animation: tSlide 0.35s ease-out; }
+    @keyframes tSlide {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .t-panel h2 {
+      font-size: 36px; font-weight: 900; margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffd93d, #ff6b6b);
+      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .t-panel .sub { color: #888; font-size: 14px; margin-bottom: 16px; }
+    .t-go-btn {
+      padding: 12px 36px; font-size: 16px; font-weight: 700;
+      background: linear-gradient(135deg, #ffd93d, #ff6b6b); color: #1a1a2e;
+      border: none; border-radius: 50px; cursor: pointer; letter-spacing: 2px;
+      transition: transform 0.2s;
+    }
+    .t-go-btn:active { transform: scale(0.95); }
+  </style>
+</head>
+<body>
+  <div class="t-wrapper">
+    <a href="/games.html" class="t-back"><i class="fas fa-arrow-left"></i> Games</a>
+    <div class="t-header">
+      <div class="t-title">MERGE MANIA</div>
+      <div class="t-scores">
+        <div class="t-score-box">
+          <div class="t-score-label">Score</div>
+          <div class="t-score-val" id="tScore">0</div>
+        </div>
+        <div class="t-score-box">
+          <div class="t-score-label">Best</div>
+          <div class="t-score-val" id="tBest">0</div>
+        </div>
+      </div>
+    </div>
+    <div class="t-board-wrap">
+      <div class="t-board" id="tBoard"></div>
+      <div class="t-overlay" id="tWin">
+        <div class="t-panel">
+          <h2>YOU WIN!</h2>
+          <div class="sub">You reached 2048!</div>
+          <button class="t-go-btn" onclick="T48.continueGame()">CONTINUE</button>
+          <br><br>
+          <button class="t-go-btn" style="background:rgba(255,255,255,0.1);color:#fff;font-size:13px" onclick="T48.newGame()">NEW GAME</button>
+        </div>
+      </div>
+      <div class="t-overlay" id="tLose">
+        <div class="t-panel">
+          <h2>GAME OVER</h2>
+          <div class="sub" id="tFinalScore">Score: 0</div>
+          <button class="t-go-btn" onclick="T48.newGame()">TRY AGAIN</button>
+        </div>
+      </div>
+    </div>
+    <button class="t-new-btn" onclick="T48.newGame()">NEW GAME</button>
+  </div>
+  <script src="/js/app.js"></script>
+  <script src="/js/2048.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+    T48.init();
+  </script>
+</body>
+</html>

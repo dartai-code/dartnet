@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DartNet - Privacy Policy</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/images/logo.jpeg">
+  <meta name="theme-color" content="#0a0a1a">
+  <style>
+    .policy-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 30px 20px 60px;
+      min-height: 100vh;
+    }
+    .policy-header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .policy-header img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      margin-bottom: 12px;
+    }
+    .policy-header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 28px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .policy-header p {
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+    .policy-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .policy-section h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      color: var(--accent2);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .policy-section h2 i {
+      font-size: 18px;
+      color: var(--accent);
+    }
+    .policy-section p,
+    .policy-section li {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .policy-section ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    .policy-section li {
+      margin-bottom: 6px;
+    }
+    .policy-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 20px;
+      transition: opacity 0.2s;
+    }
+    .policy-back:hover {
+      opacity: 0.7;
+    }
+    .policy-footer {
+      text-align: center;
+      margin-top: 30px;
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="policy-container">
+    <a href="javascript:history.back()" class="policy-back"><i class="fas fa-arrow-left"></i> Back</a>
+
+    <div class="policy-header">
+      <img src="/images/logo.jpeg" alt="DartNet">
+      <h1>Privacy Policy</h1>
+      <p>Last updated: March 13, 2026</p>
+    </div>
+
+    <div class="policy-section">
+      <h2><i class="fas fa-info-circle"></i> Introduction</h2>
+      <p>Welcome to DartNet ("we", "our", "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains what information we collect, how we use it, and your rights regarding your data when you use our platform at DartNet.</p>
+    </div>
+
+    <div class="policy-section">
+      <h2><i class="fas fa-database"></i> Information We Collect</h2>
+      <p>We collect the following information when you use DartNet:</p>
+      <ul>
+        <li><strong>Account Information:</strong> Username, email address, and encrypted password when you register.</li>
+        <li><strong>Game Data:</strong> Game scores, levels completed, and points earned from gameplay.</li>
+        <li><strong>Transaction Data:</strong> Points balance, reward history, and activity logs.</li>
+        <li><strong>Referral Data:</strong> Referral codes and referral relationships between users.</li>
+        <li><strong>Usage Data:</strong> Login timestamps and general interaction with our platform.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2><i class="fas fa-cogs"></i> How We Use Your Information</h2>
+      <p>We use the information we collect to:</p>
+      <ul>
+        <li>Create and manage your DartNet account.</li>
+        <li>Track your game scores, points, and reward progress.</li>
+        <li>Track your points, rewards, and manage your wallet.</li>
+        <li>Operate the referral and leaderboard systems.</li>
+        <li>Prevent fraud, abuse, and ensure fair gameplay.</li>
+        <li>Improve our platform and user experience.</li>
+        <li>Communicate important updates about the service.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2><i class="fas fa-shield-alt"></i> Data Security</h2>
+      <p>We take the security of your data seriously:</p>
+      <ul>
+        <li>Passwords are hashed using industry-standard bcrypt encryption and are never stored in plain text.</li>
+        <li>Authentication is handled via secure JSON Web Tokens (JWT).</li>
+        <li>API endpoints are protected with rate limiting to prevent abuse.</li>
+        <li>Security headers are applied to all responses to protect against common web vulnerabilities.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2><i class="fas fa-share-alt"></i> Data Sharing</h2>
+      <p>We do <strong>not</strong> sell, trade, or rent your personal information to third parties. Your data may be visible to other users only in the following ways:</p>
+      <ul>
+        <li><strong>Leaderboards:</strong> Your username and score/referral rank may be displayed on public leaderboards.</li>
+        <li><strong>Referrals:</strong> Users you refer may see your username as their referrer.</li>
+      </ul>
+    </div>
+
+    <div class="policy-section">
+      <h2><i class="fas fa-cookie-bite"></i> Cookies & Local Storage</h2>
+      <p>DartNet uses browser local storage to:</p>
+      <ul>
+        <li>Store your authentication token to keep you logged in.</li>
+        <li>Remember your user preferences and session data.</li>
+        <li>Cache game state for offline-capable features.</li>
+      </ul>
+      <p>We do not use third-party tracking cookies.</p>
+    </div>
+
+    <div class="policy-section">
+      <h2><i class="fas fa-user-check"></i> Your Rights</h2>
+      <p>You have the right to:</p>
+      <ul>
+        <li><strong>Access:</strong> Request a copy of the personal data we hold about you.</li>
+        <li><strong>Correction:</strong> Request correction of any inaccurate data.</li>
+        <li><strong>Deletion:</strong> Request deletion of your account and associated data.</li>
+        <li><strong>Revoke Consent:</strong> Stop using the platform at any time.</li>
+      </ul>
+      <p>To exercise any of these rights, please contact us through our platform.</p>
+    </div>
+
+    <div class="policy-section">
+      <h2><i class="fas fa-child"></i> Children's Privacy</h2>
+      <p>DartNet is not intended for use by children under the age of 13. We do not knowingly collect personal information from children under 13. If we learn that we have collected data from a child under 13, we will take steps to delete that information promptly.</p>
+    </div>
+
+    <div class="policy-section">
+      <h2><i class="fas fa-edit"></i> Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. Any changes will be reflected on this page with an updated "Last updated" date. We encourage you to review this policy periodically. Continued use of DartNet after changes constitutes acceptance of the updated policy.</p>
+    </div>
+
+    <div class="policy-section">
+      <h2><i class="fas fa-envelope"></i> Contact Us</h2>
+      <p>If you have any questions or concerns about this Privacy Policy or our data practices, please reach out to us through the DartNet platform or email us at <strong>support@dartnet.app</strong>.</p>
+    </div>
+
+    <div class="policy-footer">
+      &copy; 2026 DartNet. All rights reserved.<br>
+      <a href="/about.html" style="color:var(--accent);text-decoration:none">About Us</a> &middot;
+      <a href="/terms.html" style="color:var(--accent);text-decoration:none">Terms & Conditions</a> &middot;
+      <a href="/contact.html" style="color:var(--accent);text-decoration:none">Contact Us</a>
+    </div>
+  </div>
+</body>
+</html>

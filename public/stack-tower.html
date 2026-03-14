@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>DartNet - Stack Tower</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <meta name="theme-color" content="#0a0a1a">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a1a; overflow: hidden; touch-action: none; }
+    .st-wrapper {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 100vh; position: relative;
+    }
+    .st-back {
+      position: fixed; top: 12px; left: 12px; z-index: 20;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+      font-size: 14px; text-decoration: none; transition: background 0.2s;
+    }
+    .st-back:hover { background: rgba(255,255,255,0.15); }
+    .st-container { position: relative; display: inline-block; border-radius: 12px; overflow: hidden; }
+    #stCanvas { display: block; border-radius: 12px; }
+    .st-hud {
+      position: absolute; top: 16px; left: 0; width: 100%; text-align: center;
+      z-index: 5; pointer-events: none;
+    }
+    .st-score {
+      font-family: 'Orbitron', monospace; font-size: 48px; font-weight: 900;
+      color: #fff; text-shadow: 0 0 30px rgba(255,255,255,0.3);
+      transition: transform 0.15s; display: inline-block;
+    }
+    .st-score.pop { transform: scale(1.3); }
+    .st-best { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+    .st-combo {
+      font-size: 20px; font-weight: 700; color: #ffd93d; margin-top: 6px;
+      opacity: 0; transition: opacity 0.3s, transform 0.3s; transform: translateY(10px);
+    }
+    .st-combo.show { opacity: 1; transform: translateY(0); }
+
+    /* Overlays */
+    .st-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: none; justify-content: center; align-items: center;
+      z-index: 10; border-radius: 12px;
+      background: rgba(10,10,30,0.85); backdrop-filter: blur(8px);
+    }
+    .st-overlay.active { display: flex; }
+    .st-panel {
+      text-align: center; padding: 40px 30px; animation: stSlideUp 0.4s ease-out;
+    }
+    @keyframes stSlideUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .st-panel h1 {
+      font-size: 42px; font-weight: 900; margin-bottom: 6px;
+      background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
+      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      letter-spacing: 4px;
+    }
+    .st-panel h2 { color: #fff; font-size: 28px; margin-bottom: 8px; }
+    .st-panel .sub { color: #888; font-size: 14px; letter-spacing: 3px; margin-bottom: 30px; }
+    .st-panel .final-score {
+      font-family: 'Orbitron', monospace; font-size: 56px; font-weight: 900; color: #ffd93d;
+      margin: 10px 0; text-shadow: 0 0 30px rgba(255,217,61,0.4);
+    }
+    .st-panel .stat { color: #aaa; font-size: 14px; margin: 4px 0; }
+    .st-btn {
+      display: inline-block; padding: 14px 40px; font-size: 17px; font-weight: 700;
+      border: none; border-radius: 50px; cursor: pointer; letter-spacing: 2px;
+      transition: transform 0.2s, box-shadow 0.2s; text-transform: uppercase; margin: 6px;
+    }
+    .st-btn:active { transform: scale(0.95); }
+    .st-btn-play {
+      background: linear-gradient(135deg, #4d96ff, #6bcb77); color: #fff;
+      box-shadow: 0 4px 25px rgba(77,150,255,0.4);
+    }
+    .st-btn-play:hover { box-shadow: 0 6px 35px rgba(77,150,255,0.6); transform: scale(1.05); }
+    .st-btn-retry {
+      background: linear-gradient(135deg, #ff6b6b, #ffd93d); color: #1a1a2e;
+      box-shadow: 0 4px 25px rgba(255,107,107,0.4);
+    }
+    .st-btn-menu {
+      background: transparent; color: #888; border: 1px solid #444;
+      padding: 10px 30px; font-size: 14px; border-radius: 50px; cursor: pointer;
+    }
+    .st-tap-hint {
+      position: absolute; bottom: 60px; left: 0; width: 100%; text-align: center;
+      color: rgba(255,255,255,0.3); font-size: 14px; letter-spacing: 2px;
+      animation: stPulse 2s ease-in-out infinite; pointer-events: none;
+    }
+    @keyframes stPulse { 0%,100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+  </style>
+</head>
+<body>
+  <div class="st-wrapper">
+    <a href="/games.html" class="st-back"><i class="fas fa-arrow-left"></i> Games</a>
+    <div class="st-container" id="stContainer">
+      <canvas id="stCanvas"></canvas>
+      <div class="st-hud" id="stHud" style="display:none;">
+        <div class="st-score" id="stScore">0</div>
+        <div class="st-best" id="stBest"></div>
+        <div class="st-combo" id="stCombo">PERFECT!</div>
+      </div>
+      <div class="st-overlay active" id="stMenu">
+        <div class="st-panel">
+          <h1>STACK</h1>
+          <div class="sub">TAP TO STACK</div>
+          <button class="st-btn st-btn-play" onclick="ST.start()">PLAY</button>
+        </div>
+      </div>
+      <div class="st-overlay" id="stGameOver">
+        <div class="st-panel">
+          <h2>GAME OVER</h2>
+          <div class="final-score" id="stFinalScore">0</div>
+          <div class="stat" id="stHighScore"></div>
+          <div class="stat" id="stPerfects"></div>
+          <div style="margin-top:20px">
+            <button class="st-btn st-btn-retry" onclick="ST.start()">RETRY</button>
+          </div>
+          <button class="st-btn st-btn-menu" onclick="location.href='/games.html'">MENU</button>
+        </div>
+      </div>
+      <div class="st-tap-hint" id="stHint">TAP ANYWHERE</div>
+    </div>
+  </div>
+  <script src="/js/app.js"></script>
+  <script src="/js/stack-tower.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+    ST.init();
+  </script>
+</body>
+</html>

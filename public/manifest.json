@@ -1,0 +1,22 @@
+{
+  "name": "DartNet",
+  "short_name": "DartNet",
+  "description": "DartNet - Gaming & Reward Platform",
+  "start_url": "/dashboard.html",
+  "display": "standalone",
+  "background_color": "#0a0a1a",
+  "theme_color": "#0a0a1a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images/logo.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/images/logo.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

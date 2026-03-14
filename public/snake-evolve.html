@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>DartNet - Snake Evolve</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <meta name="theme-color" content="#0a0a1a">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#080c12;overflow:hidden;touch-action:none;user-select:none}
+    #seCanvas{position:fixed;top:0;left:0;width:100%;height:100%;display:block}
+
+    /* Back */
+    .se-back{
+      position:fixed;top:10px;left:10px;z-index:30;
+      background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+      color:#fff;padding:7px 14px;border-radius:8px;font-size:13px;
+      text-decoration:none;transition:background .2s;backdrop-filter:blur(6px)
+    }
+    .se-back:hover{background:rgba(255,255,255,.14)}
+
+    /* HUD */
+    .se-hud{
+      position:fixed;top:10px;left:0;width:100%;z-index:20;
+      display:flex;justify-content:space-between;align-items:flex-start;
+      padding:0 14px 0 70px;pointer-events:none
+    }
+    .se-hud-l,.se-hud-r{display:flex;flex-direction:column;gap:4px}
+    .se-hud-r{align-items:flex-end}
+    .se-evo{
+      font-family:'Orbitron',monospace;font-size:11px;font-weight:700;
+      letter-spacing:2px;padding:4px 10px;border-radius:20px;
+      display:inline-block;transition:all .3s
+    }
+    .se-score-display{
+      font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:#fff;
+      text-shadow:0 0 15px rgba(255,255,255,.2);transition:transform .12s
+    }
+    .se-score-display.pop{transform:scale(1.15)}
+    .se-kills-display{
+      font-family:'Orbitron',monospace;font-size:14px;color:#ff6b6b;
+      text-shadow:0 0 10px rgba(255,107,107,.3)
+    }
+    .se-length-display{font-size:12px;color:rgba(255,255,255,.4)}
+
+    /* Kill Feed */
+    .se-killfeed{
+      position:fixed;top:50px;right:12px;z-index:20;
+      display:flex;flex-direction:column;gap:4px;pointer-events:none;
+      max-width:220px
+    }
+    .se-kf-msg{
+      font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;
+      background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+      color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      animation:kfSlide .3s ease-out;transition:opacity .4s
+    }
+    .se-kf-msg.fade{opacity:0}
+    @keyframes kfSlide{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+    /* Boost */
+    .se-boost{
+      position:fixed;bottom:30px;right:20px;z-index:25;
+      width:60px;height:60px;border-radius:50%;
+      background:rgba(251,191,36,.12);border:2px solid rgba(251,191,36,.25);
+      color:#fbbf24;font-size:24px;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent
+    }
+    .se-boost.active{
+      background:rgba(251,191,36,.35);border-color:#fbbf24;
+      box-shadow:0 0 25px rgba(251,191,36,.4);transform:scale(1.1)
+    }
+
+    /* Overlays */
+    .se-overlay{
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      display:none;justify-content:center;align-items:center;
+      z-index:40;background:rgba(8,12,18,.88);backdrop-filter:blur(10px)
+    }
+    .se-overlay.active{display:flex}
+    .se-panel{
+      text-align:center;padding:36px 28px;max-width:380px;width:90%;
+      animation:seSlide .4s ease-out
+    }
+    @keyframes seSlide{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .se-panel h1{
+      font-size:40px;font-weight:900;letter-spacing:4px;margin-bottom:4px;
+      background:linear-gradient(135deg,#4ade80,#fbbf24,#ef4444,#a855f7);
+      background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent
+    }
+    .se-panel h2{font-size:26px;font-weight:800;color:#fff;margin-bottom:6px}
+    .se-panel .sub{color:#888;font-size:13px;letter-spacing:3px;margin-bottom:24px}
+    .se-death-cause{
+      color:#ff6b6b;font-size:14px;font-weight:600;margin-bottom:18px;
+      letter-spacing:1px
+    }
+    .se-death-stats{
+      display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px
+    }
+    .se-dstat{
+      background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+      border-radius:10px;padding:10px 8px
+    }
+    .se-dstat-label{font-size:10px;color:#888;letter-spacing:1.5px;text-transform:uppercase}
+    .se-dstat-val{
+      font-family:'Orbitron',monospace;font-size:20px;font-weight:800;color:#fff;
+      margin-top:2px
+    }
+    .se-btn-play{
+      display:inline-block;padding:14px 42px;font-size:16px;font-weight:700;
+      border:none;border-radius:50px;cursor:pointer;letter-spacing:2px;
+      text-transform:uppercase;margin:6px;
+      background:linear-gradient(135deg,#4ade80,#22c55e);color:#0a1a0a;
+      box-shadow:0 4px 25px rgba(74,222,128,.4);transition:transform .2s
+    }
+    .se-btn-play:active{transform:scale(.95)}
+    .se-btn-ghost{
+      display:inline-block;padding:10px 28px;font-size:13px;font-weight:600;
+      background:transparent;color:#888;border:1px solid #444;
+      border-radius:50px;cursor:pointer;letter-spacing:1px;margin:4px;
+      transition:all .2s
+    }
+    .se-btn-ghost:hover{border-color:#aaa;color:#aaa}
+
+    /* Leaderboard */
+    .se-lb-tabs{display:flex;gap:0;margin-bottom:16px;border-radius:8px;overflow:hidden}
+    .se-lb-tab{
+      flex:1;padding:10px;font-size:12px;font-weight:700;letter-spacing:2px;
+      background:rgba(255,255,255,.04);border:none;color:#666;cursor:pointer;
+      transition:all .2s;text-transform:uppercase
+    }
+    .se-lb-tab.active{background:rgba(74,222,128,.15);color:#4ade80}
+    .se-lb-table{
+      width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px
+    }
+    .se-lb-table th{
+      color:#666;font-weight:600;padding:6px 8px;text-align:left;
+      border-bottom:1px solid rgba(255,255,255,.06);font-size:10px;
+      letter-spacing:1px;text-transform:uppercase
+    }
+    .se-lb-table td{
+      color:#ccc;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.03)
+    }
+    .se-lb-table tr.me td{color:#4ade80;font-weight:700}
+    .se-lb-empty{color:#555;font-size:13px;padding:24px 0}
+
+    /* Evo flash */
+    .se-evo-flash{
+      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);
+      z-index:35;pointer-events:none;text-align:center;transition:all .4s ease-out
+    }
+    .se-evo-flash.show{transform:translate(-50%,-50%) scale(1)}
+    .se-evo-flash .evo-icon{font-size:60px;display:block;margin-bottom:4px}
+    .se-evo-flash .evo-name{
+      font-family:'Orbitron',monospace;font-size:28px;font-weight:900;
+      color:#fbbf24;text-shadow:0 0 30px rgba(251,191,36,.5);letter-spacing:4px
+    }
+    .se-evo-flash .evo-sub{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px}
+
+    /* Responsive */
+    @media(max-height:600px){
+      .se-panel h1{font-size:30px}
+      .se-panel h2{font-size:22px}
+      .se-dstat-val{font-size:16px}
+      .se-btn-play{padding:11px 32px;font-size:14px}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="seCanvas"></canvas>
+
+  <a href="/games.html" class="se-back"><i class="fas fa-arrow-left"></i> Games</a>
+
+  <!-- HUD -->
+  <div class="se-hud" id="seHud" style="display:none">
+    <div class="se-hud-l">
+      <div class="se-evo" id="seEvo">🐛 WORM</div>
+      <div class="se-score-display" id="seScoreD">0</div>
+      <div class="se-length-display" id="seLenD">Length: 10</div>
+    </div>
+    <div class="se-hud-r">
+      <div class="se-kills-display" id="seKillsD">☠ 0 Kills</div>
+    </div>
+  </div>
+
+  <!-- Kill Feed -->
+  <div class="se-killfeed" id="seKillFeed"></div>
+
+  <!-- Boost Button -->
+  <div class="se-boost" id="seBoost">⚡</div>
+
+  <!-- Evolution Flash -->
+  <div class="se-evo-flash" id="seEvoFlash">
+    <span class="evo-icon" id="seEvoIcon">🐍</span>
+    <span class="evo-name" id="seEvoName">EVOLVED!</span>
+    <span class="evo-sub">+2x Score Multiplier</span>
+  </div>
+
+  <!-- Menu -->
+  <div class="se-overlay active" id="seMenu">
+    <div class="se-panel">
+      <h1>SNAKE EVOLVE</h1>
+      <div class="sub">EAT · EVOLVE · DOMINATE</div>
+      <div style="color:#666;font-size:12px;margin-bottom:20px;line-height:1.6">
+        Steer toward your finger/mouse<br>
+        Eat food to grow &amp; evolve<br>
+        Kill AI snakes by hitting their body<br>
+        Avoid walls, yourself &amp; bigger heads
+      </div>
+      <div id="seChampionBanner" style="margin-bottom:16px;padding:10px 14px;border-radius:10px;background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(239,68,68,.12));border:1px solid rgba(251,191,36,.25);text-align:center">
+        <p style="font-size:14px;font-weight:900;color:#facc15">🏆 $50 REWARD 🏆</p>
+        <p style="font-size:12px;color:#fef9c3">First player to reach <span style="font-weight:900;color:#f87171">1,000 kills</span> wins <span style="font-weight:900;color:#4ade80">$50</span>!</p>
+        <p style="font-size:11px;font-weight:700;margin-top:4px" id="seChampStatus">Loading...</p>
+      </div>
+      <button class="se-btn-play" onclick="SE.start()">PLAY</button>
+    </div>
+  </div>
+
+  <!-- Death -->
+  <div class="se-overlay" id="seDeath">
+    <div class="se-panel">
+      <h2>ELIMINATED</h2>
+      <div class="se-death-cause" id="seDeathCause">Hit the wall</div>
+      <div class="se-death-stats">
+        <div class="se-dstat">
+          <div class="se-dstat-label">Score</div>
+          <div class="se-dstat-val" id="seDS">0</div>
+        </div>
+        <div class="se-dstat">
+          <div class="se-dstat-label">Kills</div>
+          <div class="se-dstat-val" id="seDK">0</div>
+        </div>
+        <div class="se-dstat">
+          <div class="se-dstat-label">Evolution</div>
+          <div class="se-dstat-val" id="seDE">Worm</div>
+        </div>
+        <div class="se-dstat">
+          <div class="se-dstat-label">Length</div>
+          <div class="se-dstat-val" id="seDL">0</div>
+        </div>
+      </div>
+      <button class="se-btn-play" onclick="SE.start()">RETRY</button><br>
+      <button class="se-btn-ghost" onclick="SE.showLb()">LEADERBOARD</button>
+      <button class="se-btn-ghost" onclick="location.href='/games.html'">MENU</button>
+    </div>
+  </div>
+
+  <!-- Leaderboard -->
+  <div class="se-overlay" id="seLb">
+    <div class="se-panel" style="max-width:400px">
+      <h2>LEADERBOARD</h2>
+      <div class="se-lb-tabs">
+        <button class="se-lb-tab active" data-tab="points" onclick="SE.showLbTab('points')">POINTS</button>
+        <button class="se-lb-tab" data-tab="kd" onclick="SE.showLbTab('kd')">KILLS</button>
+      </div>
+      <div id="seLbContent"></div>
+      <button class="se-btn-ghost" onclick="SE.closeLb()">CLOSE</button>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/snake-evolve.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+    SE.init();
+  </script>
+</body>
+</html>

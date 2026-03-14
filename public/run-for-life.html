@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>DartNet - Run For Life</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0a0a1a">
+  <style>
+    .rfl-container {
+      position: fixed; inset: 0;
+      background: #050510;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      overflow: hidden; user-select: none;
+      touch-action: none; z-index: 9999;
+    }
+    .rfl-canvas {
+      border: 2px solid rgba(180,30,30,0.6);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(120,0,0,0.4);
+      image-rendering: auto;
+      max-width: 100vw; max-height: 60vh;
+      width: 100%; object-fit: contain;
+    }
+    .rfl-canvas.menu-mode { max-height: 70vh; }
+    .rfl-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(4px);
+      overflow-y: auto; z-index: 10;
+    }
+    .rfl-overlay.hidden { display: none; }
+    .rfl-panel {
+      text-align: center; padding: 24px 16px;
+      max-width: 480px; width: 100%; margin: auto;
+      animation: rflSlideIn 0.3s ease-out;
+    }
+    @keyframes rflSlideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes rflShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    @keyframes rflBounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+    @keyframes rflPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+    .rfl-shake { animation: rflShake 0.4s ease-in-out infinite; }
+    .rfl-bounce { animation: rflBounce 1s ease-in-out infinite; }
+    .rfl-pulse { animation: rflPulse 1.5s ease-in-out infinite; }
+    .rfl-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(32px, 6vw, 56px);
+      font-weight: 900; color: #ef4444;
+      text-shadow: 0 0 20px rgba(239,68,68,0.5);
+      margin-bottom: 8px;
+    }
+    .rfl-subtitle { font-size: clamp(14px, 2.5vw, 18px); color: #facc15; margin-bottom: 4px; }
+    .rfl-btn {
+      display: inline-block; padding: 12px 32px;
+      border: none; border-radius: 12px; cursor: pointer;
+      font-weight: 700; font-size: clamp(16px, 2.5vw, 20px);
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s; margin: 6px;
+    }
+    .rfl-btn:hover { transform: scale(1.05); }
+    .rfl-btn:active { transform: scale(0.95); }
+    .rfl-btn-red {
+      background: linear-gradient(to bottom, #ef4444, #b91c1c);
+      color: #fff; box-shadow: 0 4px 16px rgba(185,28,28,0.4);
+    }
+    .rfl-btn-green {
+      background: linear-gradient(to bottom, #22c55e, #15803d);
+      color: #fff; box-shadow: 0 4px 16px rgba(21,128,61,0.4);
+    }
+    .rfl-btn-yellow {
+      background: linear-gradient(to bottom, #eab308, #a16207);
+      color: #fff; box-shadow: 0 4px 16px rgba(161,98,7,0.4);
+    }
+    .rfl-btn-gray {
+      background: #1f2937; color: #9ca3af;
+      border: 1px solid #374151; padding: 8px 20px; font-size: 14px;
+    }
+    .rfl-btn-gray:hover { background: #374151; }
+    .rfl-btn-small { padding: 8px 20px; font-size: 13px; border-radius: 8px; }
+    .rfl-challenge-box {
+      max-width: 320px; margin: 12px auto;
+      padding: 12px 16px;
+      background: linear-gradient(to right, rgba(234,179,8,0.2), rgba(234,179,8,0.3), rgba(234,179,8,0.2));
+      border: 2px solid #eab308; border-radius: 12px;
+    }
+    .rfl-challenge-box.pulse { animation: rflPulse 1.5s infinite; }
+    .rfl-level-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 8px; max-width: 320px; margin: 16px auto 0;
+    }
+    .rfl-level-btn {
+      padding: 8px; border-radius: 8px; font-weight: 700;
+      font-size: 13px; border: 1px solid #374151;
+      background: #1f2937; color: #d1d5db; cursor: pointer;
+      transition: all 0.15s; font-family: 'Inter', sans-serif;
+    }
+    .rfl-level-btn:hover:not(:disabled) { background: #374151; }
+    .rfl-level-btn:active:not(:disabled) { background: #4b5563; }
+    .rfl-level-btn:disabled {
+      background: #111827; color: #4b5563;
+      border-color: #1f2937; cursor: not-allowed; opacity: 0.5;
+    }
+    .rfl-emoji-big { font-size: clamp(48px, 8vw, 72px); margin-bottom: 12px; }
+    .rfl-text-dim { color: #6b7280; font-size: 13px; }
+    .rfl-text-red { color: #ef4444; }
+    .rfl-text-yellow { color: #facc15; }
+    .rfl-text-green { color: #4ade80; }
+    .rfl-text-white { color: #fff; }
+    .rfl-mt-1 { margin-top: 8px; }
+    .rfl-mt-2 { margin-top: 16px; }
+    .rfl-mb-1 { margin-bottom: 8px; }
+    .rfl-mb-2 { margin-bottom: 16px; }
+    .rfl-progress-bar {
+      width: 256px; height: 12px;
+      background: #1f2937; border-radius: 9999px;
+      margin: 16px auto; overflow: hidden;
+    }
+    .rfl-progress-fill {
+      height: 100%;
+      background: linear-gradient(to right, #4ade80, #22c55e);
+      border-radius: 9999px; transition: width 1s;
+    }
+    .rfl-troll-popup {
+      position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.8); padding: 8px 24px; border-radius: 12px;
+      border: 1px solid rgba(234,179,8,0.4);
+      box-shadow: 0 4px 16px rgba(234,179,8,0.2);
+      z-index: 20; animation: rflSlideIn 0.3s ease-out;
+    }
+    .rfl-troll-popup p { color: #facc15; font-weight: 700; text-align: center; font-size: 14px; }
+    .rfl-back-btn {
+      position: absolute; top: 12px; left: 12px; z-index: 30;
+      padding: 6px 14px; border-radius: 8px;
+      background: rgba(31,41,55,0.8); border: 1px solid #374151;
+      color: #9ca3af; font-size: 13px; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: all 0.15s;
+    }
+    .rfl-back-btn:hover { background: #374151; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="rfl-container" id="rflContainer">
+    <button class="rfl-back-btn" onclick="window.location.href='/games.html'">
+      <i class="fas fa-arrow-left"></i> Back
+    </button>
+    <canvas id="rflCanvas" class="rfl-canvas menu-mode" width="800" height="500"></canvas>
+
+    <!-- MENU -->
+    <div class="rfl-overlay" id="rflMenu">
+      <div class="rfl-panel">
+        <h1 class="rfl-title rfl-shake">RUN FOR LIFE</h1>
+        <p class="rfl-subtitle">💀 A Game You'll NEVER Beat 💀</p>
+        <div class="rfl-challenge-box pulse">
+          <p style="font-size:clamp(14px,2vw,16px); font-weight:900; color:#facc15;">🏆 $100 REWARD 🏆</p>
+          <p style="font-size:clamp(11px,1.5vw,13px); color:#fef9c3;">First <span style="font-weight:900; color:#f87171;">3 players</span> to clear Level 10 win <span style="font-weight:900; color:#4ade80;">$100</span>!</p>
+          <p style="font-size:12px; font-weight:700; margin-top:4px;" id="rflSpotsInfo">Loading spots...</p>
+          <p style="font-size:11px; color:rgba(234,179,8,0.6); margin-top:2px;">Think you can do it? 😈</p>
+        </div>
+        <p class="rfl-text-dim rfl-mb-2">Total Deaths: <span id="rflTotalDeaths">0</span></p>
+        <button class="rfl-btn rfl-btn-red rfl-pulse" onclick="RFL.startGame()" style="display:block; margin:0 auto 12px;">
+          START (you'll regret this)
+        </button>
+        <div class="rfl-level-grid" id="rflLevelGrid"></div>
+        <p class="rfl-text-dim rfl-mt-2" style="display:none;" id="rflDesktopHint">Arrow keys / WASD to move &bull; Space / ↑ to jump</p>
+        <p class="rfl-text-dim rfl-mt-2" id="rflMobileHint">Tap to jump &bull; Swipe left/right to move</p>
+      </div>
+    </div>
+
+    <!-- DEAD -->
+    <div class="rfl-overlay hidden" id="rflDead">
+      <div class="rfl-panel">
+        <div class="rfl-emoji-big rfl-bounce" id="rflDeadEmoji">🤣</div>
+        <h2 style="font-size:clamp(28px,5vw,40px); font-weight:900;" class="rfl-text-red rfl-shake rfl-mb-1">YOU DIED!</h2>
+        <p class="rfl-text-yellow rfl-mb-1" id="rflDeathMsg" style="max-width:320px; margin:0 auto 8px;"></p>
+        <p class="rfl-text-dim" id="rflDeathCount"></p>
+        <p style="font-size:16px;" id="rflHeartsDead" class="rfl-mb-2"></p>
+        <button class="rfl-btn rfl-btn-red" onclick="RFL.retryLevel()" style="display:block; margin:0 auto 8px;">
+          Try Again (it won't help)
+        </button>
+        <button class="rfl-btn rfl-btn-gray" onclick="RFL.showMenu()">Give Up (smart choice)</button>
+      </div>
+    </div>
+
+    <!-- LEVEL COMPLETE -->
+    <div class="rfl-overlay hidden" id="rflLevelComplete">
+      <div class="rfl-panel">
+        <div class="rfl-emoji-big">🎉</div>
+        <h2 style="font-size:clamp(22px,4vw,30px); font-weight:900;" class="rfl-text-green rfl-mb-1" id="rflLevelCompleteTitle"></h2>
+        <p class="rfl-text-yellow" id="rflLevelCompleteDeaths"></p>
+        <p class="rfl-text-dim rfl-mb-2" id="rflLevelCompleteQuip"></p>
+        <div class="rfl-challenge-box pulse rfl-mb-2 hidden" id="rflFinalChallenge">
+          <p style="font-size:16px; font-weight:900; color:#facc15;">🏆 FINAL CHALLENGE 🏆</p>
+          <p style="font-size:13px; color:#fef9c3;">First <span style="font-weight:900; color:#f87171;">3 players</span> to clear Level 10 win <span style="font-weight:900; color:#4ade80;">$100</span>!</p>
+          <p style="font-size:12px; color:#f87171; margin-top:4px;">⚠️ No one has ever beaten it ⚠️</p>
+        </div>
+        <button class="rfl-btn rfl-btn-green" onclick="RFL.goNext()" style="display:block; margin:0 auto 8px;" id="rflNextBtn"></button>
+        <button class="rfl-btn rfl-btn-gray" onclick="RFL.showMenu()">Menu</button>
+      </div>
+    </div>
+
+    <!-- GAME COMPLETE -->
+    <div class="rfl-overlay hidden" id="rflGameComplete">
+      <div class="rfl-panel">
+        <div class="rfl-emoji-big rfl-bounce">🏆</div>
+        <h2 style="font-size:clamp(26px,5vw,36px); font-weight:900; color:#facc15;" class="rfl-mb-1">YOU ACTUALLY BEAT IT?!</h2>
+        <p class="rfl-text-white rfl-mb-1">Total Deaths: <span id="rflFinalDeaths">0</span></p>
+        <p class="rfl-text-yellow rfl-mb-2" id="rflFinalQuip"></p>
+        <!-- Champion $100 reward banner -->
+        <div id="rflChampionBanner" class="hidden" style="background:linear-gradient(135deg, rgba(234,179,8,0.2), rgba(74,222,128,0.2)); border:2px solid #facc15; border-radius:12px; padding:12px 16px; margin-bottom:12px; text-align:center;">
+          <p style="font-size:20px; font-weight:900; color:#facc15; margin-bottom:4px;">🎉 CHAMPION <span id="rflChampSlot">#1</span> 🎉</p>
+          <p style="font-size:14px; color:#4ade80; font-weight:700;">You won the <span style="color:#facc15;">$100 Reward</span>!</p>
+          <p style="font-size:13px; color:#fef9c3; margin-top:4px;"><span id="rflChampBonus">+10,000</span> bonus points added to wallet 💰</p>
+        </div>
+        <button class="rfl-btn rfl-btn-yellow" onclick="RFL.startGame()" style="display:block; margin:0 auto 8px;">Play Again (masochist)</button>
+        <button class="rfl-btn rfl-btn-gray" onclick="RFL.showMenu()">Menu</button>
+      </div>
+    </div>
+
+    <!-- GAME OVER (unused, kept for compatibility) -->
+    <div class="rfl-overlay hidden" id="rflGameOver">
+      <div class="rfl-panel">
+        <div class="rfl-emoji-big rfl-bounce">💀</div>
+        <h2 style="font-size:clamp(28px,5vw,40px); font-weight:900;" class="rfl-text-red rfl-shake rfl-mb-1">GAME OVER</h2>
+        <button class="rfl-btn rfl-btn-red" onclick="RFL.startGame()" style="display:block; margin:0 auto 8px;">Restart</button>
+        <button class="rfl-btn rfl-btn-gray" onclick="RFL.showMenu()">Back to Menu</button>
+      </div>
+    </div>
+
+    <!-- LEVEL FAILED -->
+    <div class="rfl-overlay hidden" id="rflLevelFailed">
+      <div class="rfl-panel">
+        <div class="rfl-emoji-big rfl-bounce">💔</div>
+        <h2 style="font-size:clamp(26px,5vw,36px); font-weight:900;" class="rfl-text-red rfl-shake rfl-mb-1">LEVEL FAILED!</h2>
+        <p style="font-size:16px;" class="rfl-mb-1">🖤🖤🖤🖤🖤</p>
+        <p class="rfl-text-dim" id="rflFailedLevel"></p>
+        <p class="rfl-text-yellow rfl-mb-1" id="rflFailedDeaths"></p>
+        <p class="rfl-text-dim rfl-mb-2">All 5 hearts lost! Try again from the start of this level.</p>
+        <button class="rfl-btn rfl-btn-red" onclick="RFL.retryLevel()" style="display:block; margin:0 auto 8px;">
+          Retry Level ❤️❤️❤️❤️❤️
+        </button>
+        <button class="rfl-btn rfl-btn-gray" onclick="RFL.showMenu()">Back to Menu</button>
+      </div>
+    </div>
+
+    <!-- TODO: Watch Ad overlay — add when AdSense is ready -->
+
+    <!-- TROLL POPUP -->
+    <div class="rfl-troll-popup hidden" id="rflTrollPopup"><p id="rflTrollPopupText"></p></div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/run-for-life.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+    RFL.init();
+    // Show desktop hint if not touch device
+    if (!('ontouchstart' in window)) {
+      document.getElementById('rflDesktopHint').style.display = 'block';
+      document.getElementById('rflMobileHint').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DartNet - About Us</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/images/logo.jpeg">
+  <meta name="theme-color" content="#0a0a1a">
+  <style>
+    .about-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 30px 20px 60px;
+      min-height: 100vh;
+    }
+    .about-header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .about-header img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid var(--accent);
+      box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+      margin-bottom: 14px;
+    }
+    .about-header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 32px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .about-header p {
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+    .about-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .about-section h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      color: var(--accent2);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .about-section h2 i {
+      font-size: 18px;
+      color: var(--accent);
+    }
+    .about-section p,
+    .about-section li {
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .about-section ul {
+      margin: 10px 0;
+      padding-left: 20px;
+      list-style: none;
+    }
+    .about-section li {
+      margin-bottom: 8px;
+      padding-left: 8px;
+    }
+    .about-section li i {
+      color: var(--accent);
+      margin-right: 8px;
+      width: 18px;
+      text-align: center;
+    }
+    .about-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 20px;
+      transition: opacity 0.2s;
+    }
+    .about-back:hover {
+      opacity: 0.7;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 16px 0 6px;
+    }
+    .stat-box {
+      text-align: center;
+      padding: 16px 10px;
+      background: var(--bg-primary);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .stat-box .stat-num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .stat-box .stat-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .about-footer {
+      text-align: center;
+      margin-top: 30px;
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+    .about-footer a {
+      color: var(--text-secondary);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="about-container">
+    <a href="javascript:history.back()" class="about-back"><i class="fas fa-arrow-left"></i> Back</a>
+
+    <div class="about-header">
+      <img src="/images/logo.jpeg" alt="DartNet">
+      <h1>DARTNET</h1>
+      <p>Play. Earn. Win.</p>
+    </div>
+
+    <div class="about-section">
+      <h2><i class="fas fa-bullseye"></i> What is DartNet?</h2>
+      <p>DartNet is a gaming and rewards platform where you can play fun mini games, complete simple tasks, refer friends, and earn real rewards. We believe entertainment should be rewarding — literally.</p>
+    </div>
+
+    <div class="about-section">
+      <h2><i class="fas fa-gamepad"></i> Our Games</h2>
+      <p>DartNet features a collection of exciting mini games built for quick, competitive fun:</p>
+      <ul>
+        <li><i class="fas fa-running"></i> <strong>Run For Life</strong> — Epic platformer with a $100 champion prize</li>
+        <li><i class="fas fa-cube"></i> <strong>Shatter</strong> — 30-level brick breaker</li>
+        <li><i class="fas fa-layer-group"></i> <strong>Stack Tower</strong> — Precision stacking challenge</li>
+        <li><i class="fas fa-palette"></i> <strong>Color Switch</strong> — Color-matching jump game</li>
+        <li><i class="fas fa-th"></i> <strong>Merge Mania</strong> — Addictive number merge puzzle</li>
+        <li><i class="fas fa-dove"></i> <strong>Flappy Jump</strong> — Classic flappy obstacle game</li>
+        <li><i class="fas fa-spell-check"></i> <strong>Word Scramble</strong> — Fast word unscrambling</li>
+        <li><i class="fas fa-dragon"></i> <strong>Snake Evolve</strong> — Evolving snake arena with AI rivals</li>
+        <li><i class="fas fa-hand-pointer"></i> <strong>Tap Master</strong> — Speed tapping challenge</li>
+        <li><i class="fas fa-brain"></i> <strong>Quiz Time</strong> — Trivia knowledge test</li>
+        <li><i class="fas fa-puzzle-piece"></i> <strong>Memory Match</strong> — Card memory game</li>
+      </ul>
+    </div>
+
+    <div class="about-section">
+      <h2><i class="fas fa-coins"></i> How It Works</h2>
+      <ul>
+        <li><i class="fas fa-user-plus"></i> <strong>Sign Up</strong> — Create your free account in seconds</li>
+        <li><i class="fas fa-gamepad"></i> <strong>Play Games</strong> — Earn points by playing mini games</li>
+        <li><i class="fas fa-dharmachakra"></i> <strong>Daily Spin</strong> — Spin the wheel every day for bonus points</li>
+        <li><i class="fas fa-tasks"></i> <strong>Complete Tasks</strong> — Easy tasks for extra rewards</li>
+        <li><i class="fas fa-users"></i> <strong>Refer Friends</strong> — Earn bonus points for every friend who joins</li>
+        <li><i class="fas fa-wallet"></i> <strong>Earn Rewards</strong> — Redeem your points for exciting prizes</li>
+      </ul>
+    </div>
+
+    <div class="about-section">
+      <h2><i class="fas fa-chart-line"></i> Platform Highlights</h2>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <span class="stat-num">11</span>
+          <span class="stat-label">Mini Games</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num">$100</span>
+          <span class="stat-label">Champion Prize</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num">24/7</span>
+          <span class="stat-label">Play Anytime</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="about-section">
+      <h2><i class="fas fa-trophy"></i> Leaderboards & Rewards</h2>
+      <p>Compete with players on our global <strong>Points Leaderboard</strong> and climb the ranks. Our monthly <strong>Sharing Leaderboard</strong> rewards the top 3 referrers with exclusive prizes. Share your rank with friends and challenge them to beat you!</p>
+    </div>
+
+    <div class="about-section">
+      <h2><i class="fas fa-shield-alt"></i> Fair & Secure</h2>
+      <p>Your security is our priority. All passwords are encrypted with bcrypt, authentication uses secure tokens, and our APIs are protected against abuse with rate limiting and security headers. We never sell your data to third parties.</p>
+    </div>
+
+    <div class="about-section">
+      <h2><i class="fas fa-envelope"></i> Contact Us</h2>
+      <p>Have questions, feedback, or need support? Reach out to us at <strong>support@dartnet.app</strong>. We'd love to hear from you!</p>
+    </div>
+
+    <div class="about-footer">
+      &copy; 2026 DartNet. All rights reserved.<br>
+      <a href="/privacy.html">Privacy Policy</a> &middot;
+      <a href="/terms.html" style="color:var(--accent);text-decoration:none">Terms & Conditions</a> &middot;
+      <a href="/contact.html" style="color:var(--accent);text-decoration:none">Contact Us</a>
+    </div>
+  </div>
+</body>
+</html>

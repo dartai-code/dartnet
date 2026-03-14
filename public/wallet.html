@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DartNet - Wallet</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0a0a1a">
+</head>
+<body>
+  <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="/images/logo.jpeg" alt="DartNet">
+        <h2>DARTNET</h2>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item" href="/dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a class="nav-item" href="/spin.html"><i class="fas fa-dharmachakra"></i> Spin Wheel</a>
+        <a class="nav-item" href="/games.html"><i class="fas fa-gamepad"></i> Games</a>
+        <a class="nav-item" href="/tasks.html"><i class="fas fa-tasks"></i> Tasks</a>
+        <a class="nav-item" href="/leaderboard.html"><i class="fas fa-trophy"></i> Leaderboard</a>
+        <a class="nav-item" href="/referral.html"><i class="fas fa-user-friends"></i> Referral</a>
+        <a class="nav-item active" href="/wallet.html"><i class="fas fa-wallet"></i> Wallet</a>
+        <a class="nav-item" href="/about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a class="nav-item" href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+        <a class="nav-item" href="/terms.html"><i class="fas fa-file-contract"></i> Terms & Conditions</a>
+        <a class="nav-item" href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
+        <a class="nav-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">U</div>
+          <div class="user-details">
+            <div class="name">User</div>
+            <div class="level">Level 1</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1><i class="fas fa-wallet"></i> Wallet</h1>
+        <p>Your earnings overview.</p>
+      </div>
+
+      <!-- Balance -->
+      <div class="balance-display">
+        <p class="text-dim">Current Balance</p>
+        <div class="balance-amount" id="walletBalance">0</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="color: var(--accent)"><i class="fas fa-arrow-up"></i></div>
+          <div class="stat-value" id="totalEarned">0</div>
+          <div class="stat-label">Total Earned</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="color: var(--warning)"><i class="fas fa-exchange-alt"></i></div>
+          <div class="stat-value" id="txCount">0</div>
+          <div class="stat-label">Transactions</div>
+        </div>
+      </div>
+
+      <!-- Transactions -->
+      <div class="card" style="margin-top:16px;">
+        <h3 class="mb-2">Recent Transactions</h3>
+        <div class="transaction-list" id="txList">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+
+    async function loadWallet() {
+      try {
+        const data = await api('/api/wallet');
+        if (!data) return;
+
+        document.getElementById('walletBalance').textContent = formatPoints(data.balance);
+        document.getElementById('totalEarned').textContent = formatPoints(data.total_earned);
+        document.getElementById('txCount').textContent = data.transactions.length;
+
+        const listEl = document.getElementById('txList');
+        if (data.transactions.length === 0) {
+          listEl.innerHTML = '<p class="text-dim text-center" style="padding:20px">No transactions yet.</p>';
+          return;
+        }
+
+        listEl.innerHTML = data.transactions.map(tx => {
+          const isEarn = tx.amount > 0;
+          return `
+            <div class="transaction-item">
+              <div class="tx-info">
+                <div class="tx-icon ${isEarn ? 'earn' : 'spend'}">
+                  <i class="fas ${isEarn ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                </div>
+                <div>
+                  <div class="tx-desc">${escapeHtml(tx.description || tx.source)}</div>
+                  <div class="tx-date">${formatDate(tx.created_at)}</div>
+                </div>
+              </div>
+              <div class="tx-amount ${isEarn ? 'positive' : 'negative'}">
+                ${isEarn ? '+' : ''}${formatPoints(tx.amount)}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    loadWallet();
+    updateSidebarUser();
+  </script>
+  <script src="/js/install-popup.js"></script>
+</body>
+</html>

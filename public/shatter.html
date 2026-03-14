@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DartNet - Shatter</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0a0a1a">
+  <style>
+    .shatter-wrapper {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: calc(100vh - 60px);
+      padding: 10px; position: relative;
+    }
+    .shatter-back {
+      position: absolute; top: 12px; left: 12px; z-index: 20;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+      font-size: 14px; text-decoration: none; transition: background 0.2s;
+    }
+    .shatter-back:hover { background: rgba(255,255,255,0.15); }
+    .shatter-container {
+      position: relative; display: inline-block;
+      border-radius: 12px; overflow: hidden;
+    }
+    #shatterCanvas { display: block; border-radius: 12px; }
+
+    /* HUD */
+    #shatterHud {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      display: none; align-items: center; gap: 20px; z-index: 10;
+    }
+    #shatterHud span { color: #fff; font-size: 16px; font-weight: 600; letter-spacing: 1px; }
+    #shatterHud .ball-count { color: #4d96ff; }
+    #shatterHud .level-name { color: #ffd93d; }
+    .shatter-top-btns {
+      position: absolute; top: 12px; right: 20px; display: none; gap: 8px; z-index: 10;
+    }
+    .shatter-hud-btn {
+      background: none; border: 1px solid #555; color: #888; font-size: 16px;
+      width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+    }
+    .shatter-hud-btn:hover { color: #fff; border-color: #fff; }
+    .shatter-hud-btn.ff-active { color: #ffd93d; border-color: #ffd93d; }
+    .hud-lives { color: #ff6b6b; font-size: 16px; letter-spacing: 2px; }
+
+    /* UI Screens */
+    #shatterUI {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; justify-content: center; align-items: center;
+      pointer-events: none;
+    }
+    #shatterUI > div { pointer-events: auto; }
+    .sht-screen {
+      display: none; flex-direction: column; align-items: center;
+      background: rgba(10,10,30,0.96); border-radius: 20px;
+      padding: 40px; border: 2px solid #333; min-width: 320px;
+      box-shadow: 0 0 60px rgba(100,100,255,0.15);
+      animation: shtScreenIn 0.3s ease-out;
+    }
+    @keyframes shtScreenIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .sht-screen.active { display: flex; }
+    .sht-screen h1 {
+      font-size: 48px; font-weight: 900; letter-spacing: 8px;
+      background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 8px; animation: shtPulse 2s ease-in-out infinite;
+    }
+    @keyframes shtPulse {
+      0%, 100% { filter: brightness(1); letter-spacing: 8px; }
+      50% { filter: brightness(1.3); letter-spacing: 10px; }
+    }
+    .sht-screen h2 { color: #fff; font-size: 22px; margin-bottom: 20px; }
+    .sht-subtitle { color: #888; font-size: 14px; margin-bottom: 30px; letter-spacing: 3px; }
+    .sht-btn {
+      padding: 14px 40px; font-size: 18px; font-weight: 700;
+      border: none; border-radius: 50px; cursor: pointer;
+      transition: all 0.2s; letter-spacing: 2px; margin: 6px;
+      text-transform: uppercase;
+    }
+    .sht-btn-play {
+      background: linear-gradient(135deg, #4d96ff, #6bcb77);
+      color: #fff; box-shadow: 0 4px 20px rgba(77,150,255,0.4);
+    }
+    .sht-btn-play:hover { transform: scale(1.05); box-shadow: 0 6px 30px rgba(77,150,255,0.6); }
+    .sht-btn-retry {
+      background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+      color: #1a1a2e; box-shadow: 0 4px 20px rgba(255,107,107,0.4);
+    }
+    .sht-btn-retry:hover { transform: scale(1.05); }
+    .sht-btn-next {
+      background: linear-gradient(135deg, #6bcb77, #4d96ff);
+      color: #fff; box-shadow: 0 4px 20px rgba(107,203,119,0.4);
+    }
+    .sht-btn-next:hover { transform: scale(1.05); }
+    .sht-btn-menu {
+      background: transparent; color: #888; border: 1px solid #444;
+      padding: 10px 30px; font-size: 14px; border-radius: 50px; cursor: pointer;
+    }
+    .sht-btn-menu:hover { color: #fff; border-color: #888; }
+    /* TODO: Ad button styles — uncomment when AdSense is ready
+    .sht-btn-ad {
+      background: linear-gradient(135deg, #9b59b6, #8e44ad);
+      color: #fff; box-shadow: 0 4px 20px rgba(155,89,182,0.4);
+      font-size: 15px; padding: 12px 30px;
+    }
+    .sht-btn-ad:hover { transform: scale(1.05); }
+    */
+
+    /* Level grid */
+    .sht-level-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 10px; margin: 20px 0; max-height: 55vh; overflow-y: auto;
+      padding: 4px; scrollbar-width: thin; scrollbar-color: #444 transparent;
+    }
+    .sht-level-btn {
+      width: 56px; height: 56px; border-radius: 10px; border: 2px solid #333;
+      background: #1a1a2e; color: #fff; font-size: 18px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; display: flex;
+      flex-direction: column; align-items: center; justify-content: center;
+    }
+    .sht-level-btn:hover:not(.locked) { border-color: #4d96ff; transform: scale(1.08); box-shadow: 0 0 15px rgba(77,150,255,0.3); }
+    .sht-level-btn.locked { opacity: 0.3; cursor: not-allowed; }
+    .sht-level-btn .stars-small { font-size: 10px; margin-top: 2px; }
+
+    /* Stars */
+    .sht-stars { font-size: 40px; margin: 15px 0; letter-spacing: 5px; }
+    .sht-star { color: #333; transition: all 0.5s; display: inline-block; }
+    .sht-star.earned { color: #ffd93d; animation: shtStarPop 0.5s ease-out; }
+    @keyframes shtStarPop {
+      0% { transform: scale(0) rotate(-180deg); }
+      60% { transform: scale(1.3) rotate(10deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    .sht-score-text { color: #aaa; font-size: 16px; margin-bottom: 20px; }
+
+
+
+    /* TODO: Ad overlay styles — add when AdSense is ready */
+  </style>
+</head>
+<body>
+  <div class="shatter-wrapper">
+    <a href="/games.html" class="shatter-back"><i class="fas fa-arrow-left"></i> Games</a>
+    <div class="shatter-container" id="shatterContainer">
+      <canvas id="shatterCanvas"></canvas>
+
+      <div id="shatterHud">
+        <span class="level-name" id="sHudLevel">LEVEL 1</span>
+        <span class="ball-count" id="sHudBalls">● ×1</span>
+        <span id="sHudScore">Score: 0</span>
+        <span id="sHudCombo" class="hud-lives"></span>
+      </div>
+      <div class="shatter-top-btns" id="sTopBtns">
+        <button class="shatter-hud-btn" id="sFFBtn" title="Fast Forward (2×)">▶▶</button>
+        <button class="shatter-hud-btn" id="sPauseBtn" title="Pause">❚❚</button>
+      </div>
+
+      <div id="shatterUI">
+        <!-- Menu -->
+        <div id="sMenuScreen" class="sht-screen active">
+          <h1>SHATTER</h1>
+          <div class="sht-subtitle">AIM · SHOOT · DESTROY</div>
+          <button class="sht-btn sht-btn-play" onclick="SHT.showLevels()">PLAY</button>
+        </div>
+        <!-- Level Select -->
+        <div id="sLevelScreen" class="sht-screen">
+          <h2>SELECT LEVEL</h2>
+          <div class="sht-level-grid" id="sLevelGrid"></div>
+          <button class="sht-btn sht-btn-menu" onclick="SHT.showMenu()">BACK</button>
+        </div>
+        <!-- Win -->
+        <div id="sWinScreen" class="sht-screen">
+          <h2 id="sWinTitle">LEVEL COMPLETE!</h2>
+          <div class="sht-stars" id="sWinStars"></div>
+          <div class="sht-score-text" id="sWinScore"></div>
+          <div style="display:flex;gap:10px">
+            <button class="sht-btn sht-btn-retry" onclick="SHT.retryLevel()">RETRY</button>
+            <button class="sht-btn sht-btn-next" id="sNextBtn" onclick="SHT.nextLevel()">NEXT</button>
+          </div>
+          <button class="sht-btn sht-btn-menu" style="margin-top:12px" onclick="SHT.showLevels()">LEVELS</button>
+        </div>
+        <!-- Lose -->
+        <div id="sLoseScreen" class="sht-screen">
+          <h2>BLOCKS REACHED BOTTOM!</h2>
+          <div class="sht-score-text" id="sLoseScore"></div>
+          <button class="sht-btn sht-btn-retry" onclick="SHT.retryLevel()">TRY AGAIN</button>
+          <button class="sht-btn sht-btn-menu" style="margin-top:12px" onclick="SHT.showLevels()">LEVELS</button>
+        </div>
+
+        <!-- Pause -->
+        <div id="sPauseScreen" class="sht-screen">
+          <h2>PAUSED</h2>
+          <button class="sht-btn sht-btn-play" onclick="SHT.togglePause()">RESUME</button>
+          <button class="sht-btn sht-btn-retry" style="margin-top:8px" onclick="SHT.retryLevel()">RESTART</button>
+          <button class="sht-btn sht-btn-menu" style="margin-top:8px" onclick="SHT.showLevels()">LEVELS</button>
+        </div>
+      </div>
+
+      <!-- TODO: Ad overlay — add when AdSense is ready -->
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/shatter.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+    SHT.init();
+  </script>
+</body>
+</html>

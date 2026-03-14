@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>DartNet - Word Scramble</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <meta name="theme-color" content="#0a0a1a">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a1a; color: #fff; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    .ws-wrapper {
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh; padding: 16px; padding-top: 60px;
+    }
+    .ws-back {
+      position: fixed; top: 12px; left: 12px; z-index: 20;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+      font-size: 14px; text-decoration: none; transition: background 0.2s;
+    }
+    .ws-back:hover { background: rgba(255,255,255,0.15); }
+    .ws-game { width: 100%; max-width: 420px; }
+
+    /* Header */
+    .ws-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+    }
+    .ws-title {
+      font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 900;
+      background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .ws-stats { display: flex; gap: 12px; }
+    .ws-stat-box {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 6px 12px; text-align: center;
+    }
+    .ws-stat-label { font-size: 9px; color: #888; letter-spacing: 1.5px; text-transform: uppercase; }
+    .ws-stat-val { font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 700; color: #fff; }
+
+    /* Timer */
+    .ws-timer-bar {
+      width: 100%; height: 6px; background: rgba(255,255,255,0.06);
+      border-radius: 3px; margin-bottom: 24px; overflow: hidden;
+    }
+    .ws-timer-fill {
+      height: 100%; border-radius: 3px; transition: width 0.3s linear;
+      background: linear-gradient(90deg, #6bcb77, #ffd93d, #ff6b6b);
+    }
+
+    /* Scrambled letters */
+    .ws-scramble {
+      display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 24px; min-height: 60px;
+    }
+    .ws-letter {
+      width: 48px; height: 52px; display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 900;
+      background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.12);
+      border-radius: 12px; cursor: pointer; transition: all 0.2s; user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ws-letter:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+    .ws-letter:active { transform: scale(0.92); }
+    .ws-letter.selected {
+      background: rgba(108,92,231,0.3); border-color: #6c5ce7;
+      box-shadow: 0 0 15px rgba(108,92,231,0.3); transform: translateY(-4px);
+    }
+    .ws-letter.pop { animation: wsLetterPop 0.25s ease; }
+    @keyframes wsLetterPop {
+      0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Answer slots */
+    .ws-answer {
+      display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 24px; min-height: 60px;
+    }
+    .ws-slot {
+      width: 48px; height: 52px; display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 900;
+      border: 2px dashed rgba(255,255,255,0.15); border-radius: 12px;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .ws-slot.filled {
+      background: rgba(108,92,231,0.2); border-style: solid; border-color: #6c5ce7;
+      color: #a29bfe;
+    }
+    .ws-slot.correct {
+      background: rgba(107,203,119,0.2); border-color: #6bcb77; color: #6bcb77;
+      animation: wsCorrectPulse 0.4s ease;
+    }
+    .ws-slot.wrong {
+      background: rgba(255,107,107,0.2); border-color: #ff6b6b; color: #ff6b6b;
+      animation: wsShake 0.4s ease;
+    }
+    @keyframes wsCorrectPulse {
+      0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); }
+    }
+    @keyframes wsShake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    /* Hint */
+    .ws-hint {
+      text-align: center; font-size: 14px; color: #888; margin-bottom: 16px;
+      min-height: 20px; font-style: italic;
+    }
+
+    /* Actions */
+    .ws-actions { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
+    .ws-action-btn {
+      padding: 10px 24px; font-size: 13px; font-weight: 600; border: none;
+      border-radius: 50px; cursor: pointer; letter-spacing: 1px;
+      transition: all 0.2s; text-transform: uppercase;
+    }
+    .ws-action-btn:active { transform: scale(0.95); }
+    .ws-clear-btn {
+      background: rgba(255,255,255,0.06); color: #888;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .ws-shuffle-btn {
+      background: rgba(108,92,231,0.2); color: #a29bfe;
+      border: 1px solid rgba(108,92,231,0.3);
+    }
+    .ws-hint-btn {
+      background: rgba(255,217,61,0.15); color: #ffd93d;
+      border: 1px solid rgba(255,217,61,0.3);
+    }
+
+    /* Overlay */
+    .ws-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      display: none; justify-content: center; align-items: center;
+      z-index: 30; background: rgba(10,10,30,0.9); backdrop-filter: blur(8px);
+    }
+    .ws-overlay.active { display: flex; }
+    .ws-panel { text-align: center; padding: 40px 30px; animation: wsSlide 0.4s ease-out; }
+    @keyframes wsSlide {
+      from { transform: translateY(40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .ws-panel h1 {
+      font-size: 32px; font-weight: 900; margin-bottom: 6px;
+      background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+      background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .ws-panel h2 { color: #fff; font-size: 26px; margin-bottom: 6px; }
+    .ws-panel .sub { color: #888; font-size: 14px; letter-spacing: 3px; margin-bottom: 24px; }
+    .ws-panel .final-score {
+      font-family: 'Orbitron', monospace; font-size: 48px; font-weight: 900;
+      color: #ffd93d; margin: 10px 0; text-shadow: 0 0 30px rgba(255,217,61,0.4);
+    }
+    .ws-panel .stat { color: #aaa; font-size: 14px; margin: 4px 0; }
+    .ws-go-btn {
+      display: inline-block; padding: 14px 40px; font-size: 17px; font-weight: 700;
+      border: none; border-radius: 50px; cursor: pointer; letter-spacing: 2px;
+      transition: transform 0.2s; text-transform: uppercase; margin: 6px;
+      background: linear-gradient(135deg, #a29bfe, #6c5ce7); color: #fff;
+      box-shadow: 0 4px 25px rgba(108,92,231,0.4);
+    }
+    .ws-go-btn:active { transform: scale(0.95); }
+    .ws-menu-btn {
+      background: transparent; color: #888; border: 1px solid #444;
+      padding: 10px 30px; font-size: 14px; border-radius: 50px; cursor: pointer;
+    }
+
+    /* Round result flash */
+    .ws-flash {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
+      font-family: 'Orbitron', monospace; font-size: 36px; font-weight: 900;
+      pointer-events: none; z-index: 25; transition: all 0.3s ease;
+    }
+    .ws-flash.show { transform: translate(-50%,-50%) scale(1); }
+    .ws-flash.correct-flash { color: #6bcb77; text-shadow: 0 0 30px rgba(107,203,119,0.5); }
+    .ws-flash.wrong-flash { color: #ff6b6b; text-shadow: 0 0 30px rgba(255,107,107,0.5); }
+  </style>
+</head>
+<body>
+  <div class="ws-wrapper">
+    <a href="/games.html" class="ws-back"><i class="fas fa-arrow-left"></i> Games</a>
+    <div class="ws-game" id="wsGame">
+      <div class="ws-header">
+        <div class="ws-title">WORD SCRAMBLE</div>
+        <div class="ws-stats">
+          <div class="ws-stat-box">
+            <div class="ws-stat-label">Score</div>
+            <div class="ws-stat-val" id="wsScore">0</div>
+          </div>
+          <div class="ws-stat-box">
+            <div class="ws-stat-label">Round</div>
+            <div class="ws-stat-val" id="wsRound">0/0</div>
+          </div>
+        </div>
+      </div>
+      <div class="ws-timer-bar">
+        <div class="ws-timer-fill" id="wsTimer" style="width:100%"></div>
+      </div>
+      <div class="ws-hint" id="wsHint"></div>
+      <div class="ws-answer" id="wsAnswer"></div>
+      <div class="ws-scramble" id="wsScramble"></div>
+      <div class="ws-actions">
+        <button class="ws-action-btn ws-clear-btn" onclick="WS.clearAnswer()">CLEAR</button>
+        <button class="ws-action-btn ws-shuffle-btn" onclick="WS.shuffleLetters()">SHUFFLE</button>
+        <button class="ws-action-btn ws-hint-btn" onclick="WS.useHint()">HINT</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ws-flash" id="wsFlash"></div>
+
+  <div class="ws-overlay active" id="wsMenu">
+    <div class="ws-panel">
+      <h1>WORD SCRAMBLE</h1>
+      <div class="sub">UNSCRAMBLE THE LETTERS</div>
+      <button class="ws-go-btn" onclick="WS.start()">PLAY</button>
+    </div>
+  </div>
+  <div class="ws-overlay" id="wsGameOver">
+    <div class="ws-panel">
+      <h2>TIMES UP!</h2>
+      <div class="final-score" id="wsFinalScore">0</div>
+      <div class="stat" id="wsSolved"></div>
+      <div class="stat" id="wsBestStat"></div>
+      <div style="margin-top:20px;">
+        <button class="ws-go-btn" onclick="WS.start()">PLAY AGAIN</button>
+      </div>
+      <button class="ws-menu-btn" onclick="location.href='/games.html'" style="margin-top:10px;">MENU</button>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/word-scramble.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+    WS.init();
+  </script>
+</body>
+</html>
