@@ -13,6 +13,7 @@ var RFL = (function () {
 
   // ===================== STATE =====================
   var canvas, ctx;
+  var dpr = 1;
   var animId = 0;
   var keys = {};
   var gameState = 'menu'; // menu | playing | dead | levelFailed | levelComplete | gameComplete
@@ -39,6 +40,14 @@ var RFL = (function () {
 
   // Touch state
   var touchStartX = 0;
+  var isTouchDevice = 'ontouchstart' in window;
+
+  function sizeCanvas() {
+    dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
 
   function makePlayer() {
     return {
@@ -1500,7 +1509,7 @@ var RFL = (function () {
 
       // Controls hint
       ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.font = '10px Inter, Arial, sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('← → / AD Move  |  SPACE / ↑ Jump  |  Double Jump Available', W / 2, H - 8);
+      ctx.fillText(isTouchDevice ? 'Tap = Jump  |  Swipe = Move  |  Double Jump Available' : '← → / AD Move  |  SPACE / ↑ Jump  |  Double Jump Available', W / 2, H - 8);
 
       ctx.restore();
       animId = requestAnimationFrame(loop);
@@ -1554,7 +1563,8 @@ var RFL = (function () {
     init: function () {
       canvas = document.getElementById('rflCanvas');
       ctx = canvas.getContext('2d');
-      canvas.width = W; canvas.height = H;
+      sizeCanvas();
+      window.addEventListener('resize', sizeCanvas);
       window.addEventListener('keydown', onKeyDown);
       window.addEventListener('keyup', onKeyUp);
       canvas.addEventListener('touchstart', onTouchStart, { passive: false });

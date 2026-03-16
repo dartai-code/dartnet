@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>DartNet - Shatter</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -13,6 +13,8 @@
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; min-height: calc(100vh - 60px);
       padding: 10px; position: relative;
+      touch-action: none; user-select: none;
+      overflow: hidden;
     }
     .shatter-back {
       position: absolute; top: 12px; left: 12px; z-index: 20;

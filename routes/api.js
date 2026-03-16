@@ -577,4 +577,76 @@ router.get('/withdrawals', authenticateToken, (req, res) => {
   res.json(withdrawals);
 });
 
+// ========================
+// PLAYER PROFILE
+// ========================
+
+router.get('/profile', authenticateToken, (req, res) => {
+  const userId = req.user.user_id;
+  const u = req.user;
+
+  // Total games played
+  const gamesPlayed = db.prepare('SELECT COUNT(*) as count FROM game_scores WHERE user_id = ?').get(userId);
+
+  // Per-game best scores
+  const bestScores = db.prepare(`
+    SELECT game_id, MAX(score) as best_score, COUNT(*) as times_played
+    FROM game_scores WHERE user_id = ?
+    GROUP BY game_id ORDER BY best_score DESC
+  `).all(userId);
+
+  // Total spins
+  const totalSpins = db.prepare('SELECT COUNT(*) as count FROM spin_history WHERE user_id = ?').get(userId);
+
+  // Tasks completed
+  const tasksCompleted = db.prepare("SELECT COUNT(*) as count FROM user_tasks WHERE user_id = ? AND status = 'completed'").get(userId);
+
+  // Referral count
+  const referralCount = db.prepare('SELECT COUNT(*) as count FROM referrals WHERE referrer_id = ?').get(userId);
+
+  // Leaderboard rank
+  const rankRow = db.prepare(`
+    SELECT COUNT(*) + 1 as rank FROM users
+    WHERE total_earned > (SELECT total_earned FROM users WHERE user_id = ?) AND is_banned = 0
+  `).get(userId);
+
+  // Total players
+  const totalPlayers = db.prepare('SELECT COUNT(*) as count FROM users WHERE is_banned = 0').get();
+
+  // Recent activity (last 10 transactions)
+  const recentActivity = db.prepare(
+    'SELECT type, source, amount, description, created_at FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 10'
+  ).all(userId);
+
+  // Withdrawal stats
+  const withdrawalStats = db.prepare(`
+    SELECT
+      COALESCE(SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END), 0) as total_withdrawn,
+      COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count
+    FROM withdrawals WHERE user_id = ?
+  `).get(userId);
+
+  res.json({
+    user_id: u.user_id,
+    username: u.username,
+    email: u.email,
+    referral_code: u.referral_code,
+    wallet_points: u.wallet_points,
+    total_earned: u.total_earned,
+    level: u.level,
+    daily_streak: u.daily_streak,
+    join_date: u.join_date,
+    games_played: gamesPlayed.count,
+    best_scores: bestScores,
+    total_spins: totalSpins.count,
+    tasks_completed: tasksCompleted.count,
+    referral_count: referralCount.count,
+    rank: rankRow ? rankRow.rank : 1,
+    total_players: totalPlayers.count,
+    recent_activity: recentActivity,
+    total_withdrawn: withdrawalStats.total_withdrawn,
+    pending_withdrawals: withdrawalStats.pending_count
+  });
+});
+
 module.exports = router;

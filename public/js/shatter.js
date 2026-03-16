@@ -838,6 +838,21 @@ var SHT = (function () {
     window.addEventListener('resize', resize);
     canvas.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('click', onClick);
+    canvas.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      var t = e.touches[0];
+      var rect = canvas.getBoundingClientRect();
+      mouseX = (t.clientX - rect.left) * (W / rect.width);
+      mouseY = (t.clientY - rect.top) * (H / rect.height);
+      if (gameState === 'aiming') {
+        var dx = mouseX - launchX;
+        var dy = mouseY - LAUNCH_Y;
+        if (dy < -10) {
+          aimAngle = Math.atan2(dy, dx);
+          aimAngle = clamp(aimAngle, -Math.PI + 0.15, -0.15);
+        }
+      }
+    }, { passive: false });
     canvas.addEventListener('touchmove', onTouchMove, { passive: false });
     canvas.addEventListener('touchend', onTouchEnd, { passive: false });
     // HUD buttons

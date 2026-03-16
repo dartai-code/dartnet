@@ -179,9 +179,7 @@ function initializeDatabase() {
     // Timer-based tasks: [title, desc, points, link, type, verification, timer]
     const timerTasks = [
       ['Join Telegram Community', 'Join our official DartNet Telegram community for updates, support & announcements', 200, 'https://t.me/+6QSJUkIKJwVlYmY1', 'visit', 'timer', 15],
-      ['Visit our partner site', 'Visit the sponsor website and stay for 30 seconds', 100, 'https://example.com', 'visit', 'timer', 30],
-      ['Watch promo video', 'Watch the full promotional video to earn points', 150, 'https://example.com/video', 'watch', 'timer', 60],
-      ['Follow on social media', 'Follow DartNet on social media', 200, 'https://example.com/social', 'visit', 'timer', 15],
+      ['Follow us on Instagram', 'Follow DartNet on Instagram for updates, giveaways & exclusive content', 200, 'https://www.instagram.com/dartnet_official', 'visit', 'timer', 15],
     ];
     const insertTimer = db.prepare('INSERT INTO tasks (task_title, task_description, reward_points, task_link, task_type, verification_type, timer_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)');
     for (const t of timerTasks) {
@@ -206,6 +204,19 @@ function initializeDatabase() {
       insertGame.run(...t);
     }
     console.log('Sample tasks created');
+  }
+
+  // Migration: remove old placeholder tasks and ensure Instagram task exists
+  const oldTasks = ['Visit our partner site', 'Watch promo video', 'Follow on social media'];
+  const deleteOld = db.prepare('UPDATE tasks SET is_active = 0 WHERE task_title = ?');
+  for (const title of oldTasks) {
+    deleteOld.run(title);
+  }
+  const instaExists = db.prepare("SELECT task_id FROM tasks WHERE task_title = 'Follow us on Instagram' AND is_active = 1").get();
+  if (!instaExists) {
+    db.prepare('INSERT INTO tasks (task_title, task_description, reward_points, task_link, task_type, verification_type, timer_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
+      'Follow us on Instagram', 'Follow DartNet on Instagram for updates, giveaways & exclusive content', 200, 'https://www.instagram.com/dartnet_official', 'visit', 'timer', 15
+    );
   }
 
   console.log('Database initialized successfully');

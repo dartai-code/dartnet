@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DartNet - Player Profile</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0a0a1a">
+  <style>
+    /* Profile Header */
+    .profile-header {
+      text-align: center;
+      padding: 36px 20px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.08), rgba(139, 92, 246, 0.08));
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .profile-header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple), var(--neon-pink));
+    }
+    .profile-avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 36px;
+      font-weight: 900;
+      color: #000;
+      margin: 0 auto 14px;
+      border: 3px solid var(--neon-cyan);
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+    }
+    .profile-username {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .profile-email {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    .profile-badges {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .profile-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .profile-badge.level {
+      background: rgba(0, 255, 136, 0.12);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      color: var(--neon-green);
+    }
+    .profile-badge.rank {
+      background: rgba(255, 208, 0, 0.12);
+      border: 1px solid rgba(255, 208, 0, 0.3);
+      color: var(--neon-yellow);
+    }
+    .profile-badge.streak {
+      background: rgba(255, 107, 53, 0.12);
+      border: 1px solid rgba(255, 107, 53, 0.3);
+      color: var(--neon-orange);
+    }
+    .profile-badge.member {
+      background: rgba(139, 92, 246, 0.12);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      color: var(--neon-purple);
+    }
+
+    /* Stats Overview */
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .profile-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 18px 14px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .profile-stat:hover {
+      border-color: rgba(0, 240, 255, 0.3);
+      box-shadow: var(--shadow-neon);
+    }
+    .profile-stat .ps-icon {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+    .profile-stat .ps-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .profile-stat .ps-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Game Scores Section */
+    .game-scores-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .game-score-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all 0.2s;
+    }
+    .game-score-card:hover {
+      border-color: rgba(139, 92, 246, 0.3);
+    }
+    .game-score-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(139, 92, 246, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .game-score-info h4 {
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+    .game-score-info .gs-best {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--neon-yellow);
+    }
+    .game-score-info .gs-plays {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Activity Timeline */
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+    }
+    .activity-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .activity-dot.earn { background: var(--neon-green); box-shadow: 0 0 8px rgba(0, 255, 136, 0.4); }
+    .activity-dot.spend { background: var(--danger); box-shadow: 0 0 8px rgba(255, 68, 68, 0.4); }
+    .activity-desc {
+      flex: 1;
+      font-size: 13px;
+    }
+    .activity-amount {
+      font-weight: 700;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .activity-amount.positive { color: var(--neon-green); }
+    .activity-amount.negative { color: var(--danger); }
+    .activity-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .section-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title i {
+      color: var(--neon-cyan);
+    }
+
+    .mb-24 { margin-bottom: 24px; }
+
+    @media (max-width: 768px) {
+      .profile-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .game-scores-grid {
+        grid-template-columns: 1fr;
+      }
+      .profile-avatar {
+        width: 70px;
+        height: 70px;
+        font-size: 28px;
+      }
+      .profile-username {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="/images/logo.jpeg" alt="DartNet">
+        <h2>DARTNET</h2>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item" href="/dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a class="nav-item active" href="/profile.html"><i class="fas fa-user-circle"></i> Profile</a>
+        <a class="nav-item" href="/spin.html"><i class="fas fa-dharmachakra"></i> Spin Wheel</a>
+        <a class="nav-item" href="/games.html"><i class="fas fa-gamepad"></i> Games</a>
+        <a class="nav-item" href="/tasks.html"><i class="fas fa-tasks"></i> Tasks</a>
+        <a class="nav-item" href="/leaderboard.html"><i class="fas fa-trophy"></i> Leaderboard</a>
+        <a class="nav-item" href="/referral.html"><i class="fas fa-user-friends"></i> Referral</a>
+        <a class="nav-item" href="/wallet.html"><i class="fas fa-wallet"></i> Wallet</a>
+        <a class="nav-item" href="/about.html"><i class="fas fa-info-circle"></i> About Us</a>
+        <a class="nav-item" href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+        <a class="nav-item" href="/terms.html"><i class="fas fa-file-contract"></i> Terms & Conditions</a>
+        <a class="nav-item" href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
+        <a class="nav-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">U</div>
+          <div class="user-details">
+            <div class="name">User</div>
+            <div class="level">Level 1</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1><i class="fas fa-user-circle"></i> Player Profile</h1>
+        <p>Your stats and achievements at a glance.</p>
+      </div>
+
+      <!-- Loading -->
+      <div id="profileLoading" class="loading"><div class="spinner"></div></div>
+
+      <!-- Profile Content (hidden until loaded) -->
+      <div id="profileContent" style="display:none;">
+
+        <!-- Profile Header Card -->
+        <div class="profile-header">
+          <div class="profile-avatar" id="profileAvatar">U</div>
+          <div class="profile-username" id="profileUsername">Player</div>
+          <div class="profile-email" id="profileEmail">—</div>
+          <div class="profile-badges">
+            <span class="profile-badge level" id="badgeLevel"><i class="fas fa-star"></i> Level 1</span>
+            <span class="profile-badge rank" id="badgeRank"><i class="fas fa-trophy"></i> Rank #—</span>
+            <span class="profile-badge streak" id="badgeStreak"><i class="fas fa-fire"></i> 0 Day Streak</span>
+            <span class="profile-badge member" id="badgeMember"><i class="fas fa-clock"></i> Member since —</span>
+          </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="profile-stats">
+          <div class="profile-stat">
+            <div class="ps-icon" style="color:var(--neon-cyan)"><i class="fas fa-coins"></i></div>
+            <div class="ps-value" id="psBalance">0</div>
+            <div class="ps-label">Balance</div>
+          </div>
+          <div class="profile-stat">
+            <div class="ps-icon" style="color:var(--neon-green)"><i class="fas fa-chart-line"></i></div>
+            <div class="ps-value" id="psTotalEarned">0</div>
+            <div class="ps-label">Total Earned</div>
+          </div>
+          <div class="profile-stat">
+            <div class="ps-icon" style="color:var(--neon-purple)"><i class="fas fa-gamepad"></i></div>
+            <div class="ps-value" id="psGamesPlayed">0</div>
+            <div class="ps-label">Games Played</div>
+          </div>
+          <div class="profile-stat">
+            <div class="ps-icon" style="color:var(--neon-yellow)"><i class="fas fa-dharmachakra"></i></div>
+            <div class="ps-value" id="psSpins">0</div>
+            <div class="ps-label">Total Spins</div>
+          </div>
+          <div class="profile-stat">
+            <div class="ps-icon" style="color:var(--neon-orange)"><i class="fas fa-clipboard-check"></i></div>
+            <div class="ps-value" id="psTasks">0</div>
+            <div class="ps-label">Tasks Done</div>
+          </div>
+          <div class="profile-stat">
+            <div class="ps-icon" style="color:var(--neon-pink)"><i class="fas fa-user-friends"></i></div>
+            <div class="ps-value" id="psReferrals">0</div>
+            <div class="ps-label">Referrals</div>
+          </div>
+        </div>
+
+        <!-- Referral Code Card -->
+        <div class="card mb-24">
+          <div class="section-title"><i class="fas fa-share-alt"></i> Your Referral Code</div>
+          <div class="referral-code-box">
+            <code id="profileReferralCode">————</code>
+            <button class="btn btn-sm btn-primary" onclick="copyReferral()" style="width:auto; padding:8px 16px;">
+              <i class="fas fa-copy"></i> Copy
+            </button>
+          </div>
+        </div>
+
+        <!-- Game Best Scores -->
+        <div class="mb-24">
+          <div class="section-title"><i class="fas fa-medal"></i> Game Best Scores</div>
+          <div class="game-scores-grid" id="gameScoresGrid">
+            <div class="empty-state" style="grid-column: 1/-1;">
+              <i class="fas fa-gamepad"></i>
+              <p>No games played yet. Start playing to see your stats!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wallet Overview -->
+        <div class="card mb-24">
+          <div class="section-title"><i class="fas fa-wallet"></i> Wallet Overview</div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px;">
+            <div class="profile-stat" style="border:none; padding:12px;">
+              <div class="ps-value" style="color:var(--neon-green); font-size:18px;" id="psWalletEarned">0</div>
+              <div class="ps-label">Total Earned</div>
+            </div>
+            <div class="profile-stat" style="border:none; padding:12px;">
+              <div class="ps-value" style="color:var(--danger); font-size:18px;" id="psWalletWithdrawn">0</div>
+              <div class="ps-label">Withdrawn</div>
+            </div>
+            <div class="profile-stat" style="border:none; padding:12px;">
+              <div class="ps-value" style="color:var(--neon-cyan); font-size:18px;" id="psWalletBalance">0</div>
+              <div class="ps-label">Current Balance</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="mb-24">
+          <div class="section-title"><i class="fas fa-history"></i> Recent Activity</div>
+          <div class="activity-list" id="activityList">
+            <div class="empty-state">
+              <i class="fas fa-clock"></i>
+              <p>No activity yet.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireAuth()) throw 'auth';
+
+    const GAME_NAMES = {
+      'shatter': { name: 'Shatter', icon: '💥' },
+      'stack-tower': { name: 'Stack Tower', icon: '🏗️' },
+      'color-switch': { name: 'Color Switch', icon: '🎨' },
+      '2048': { name: 'Merge Mania', icon: '🔢' },
+      'merge-mania': { name: 'Merge Mania', icon: '🔢' },
+      'flappy-jump': { name: 'Flappy Jump', icon: '🐦' },
+      'word-scramble': { name: 'Word Scramble', icon: '📝' },
+      'run-for-life': { name: 'Run For Life', icon: '🏃' },
+      'snake-evolve': { name: 'Snake Evolve', icon: '🐍' },
+      'spin': { name: 'Spin Wheel', icon: '🎡' }
+    };
+
+    function timeAgo(dateStr) {
+      const now = new Date();
+      const d = new Date(dateStr);
+      const diffMs = now - d;
+      const mins = Math.floor(diffMs / 60000);
+      if (mins < 1) return 'Just now';
+      if (mins < 60) return mins + 'm ago';
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + 'h ago';
+      const days = Math.floor(hrs / 24);
+      if (days < 30) return days + 'd ago';
+      return formatDate(dateStr);
+    }
+
+    function copyReferral() {
+      const code = document.getElementById('profileReferralCode').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        showToast('Referral code copied!', 'success');
+      });
+    }
+
+    async function loadProfile() {
+      try {
+        const data = await api('/api/profile');
+        if (!data) return;
+
+        setUser(data);
+        updateSidebarUser();
+
+        // Show content, hide loading
+        document.getElementById('profileLoading').style.display = 'none';
+        document.getElementById('profileContent').style.display = 'block';
+
+        // Header
+        document.getElementById('profileAvatar').textContent = (data.username || 'U')[0].toUpperCase();
+        document.getElementById('profileUsername').textContent = data.username;
+        document.getElementById('profileEmail').textContent = data.email;
+
+        // Badges
+        document.getElementById('badgeLevel').innerHTML = `<i class="fas fa-star"></i> Level ${data.level}`;
+        document.getElementById('badgeRank').innerHTML = `<i class="fas fa-trophy"></i> Rank #${data.rank} / ${formatPoints(data.total_players)}`;
+        document.getElementById('badgeStreak').innerHTML = `<i class="fas fa-fire"></i> ${data.daily_streak} Day Streak`;
+        document.getElementById('badgeMember').innerHTML = `<i class="fas fa-clock"></i> Joined ${formatDate(data.join_date)}`;
+
+        // Stats
+        document.getElementById('psBalance').textContent = formatPoints(data.wallet_points);
+        document.getElementById('psTotalEarned').textContent = formatPoints(data.total_earned);
+        document.getElementById('psGamesPlayed').textContent = formatPoints(data.games_played);
+        document.getElementById('psSpins').textContent = formatPoints(data.total_spins);
+        document.getElementById('psTasks').textContent = formatPoints(data.tasks_completed);
+        document.getElementById('psReferrals').textContent = formatPoints(data.referral_count);
+
+        // Referral Code
+        document.getElementById('profileReferralCode').textContent = data.referral_code;
+
+        // Game Scores
+        const scoresGrid = document.getElementById('gameScoresGrid');
+        if (data.best_scores && data.best_scores.length > 0) {
+          scoresGrid.innerHTML = data.best_scores.map(g => {
+            const info = GAME_NAMES[g.game_id] || { name: g.game_id, icon: '🎮' };
+            return `
+              <div class="game-score-card">
+                <div class="game-score-icon">${info.icon}</div>
+                <div class="game-score-info">
+                  <h4>${info.name}</h4>
+                  <div class="gs-best">${formatPoints(g.best_score)}</div>
+                  <div class="gs-plays">${g.times_played} game${g.times_played !== 1 ? 's' : ''} played</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+
+        // Wallet Overview
+        document.getElementById('psWalletEarned').textContent = formatPoints(data.total_earned);
+        document.getElementById('psWalletWithdrawn').textContent = formatPoints(data.total_withdrawn);
+        document.getElementById('psWalletBalance').textContent = formatPoints(data.wallet_points);
+
+        // Recent Activity
+        const activityEl = document.getElementById('activityList');
+        if (data.recent_activity && data.recent_activity.length > 0) {
+          activityEl.innerHTML = data.recent_activity.map(a => {
+            const isEarn = a.type === 'earn';
+            return `
+              <div class="activity-item">
+                <div class="activity-dot ${a.type}"></div>
+                <div class="activity-desc">${a.description || a.source}</div>
+                <div class="activity-amount ${isEarn ? 'positive' : 'negative'}">${isEarn ? '+' : ''}${formatPoints(a.amount)}</div>
+                <div class="activity-time">${timeAgo(a.created_at)}</div>
+              </div>
+            `;
+          }).join('');
+        }
+
+      } catch (err) {
+        console.error('Profile load error:', err);
+        document.getElementById('profileLoading').innerHTML = '<p style="color:var(--danger);text-align:center;">Failed to load profile.</p>';
+      }
+    }
+
+    loadProfile();
+  </script>
+  <script src="/js/install-popup.js"></script>
+</body>
+</html>
