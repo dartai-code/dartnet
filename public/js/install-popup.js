@@ -1,12 +1,15 @@
 (function () {
   // Don't show if already installed as PWA
   if (window.matchMedia('(display-mode: standalone)').matches) return;
-  // Don't show on login/register/index pages
+  // Don't show on login/register pages
   var path = window.location.pathname;
-  if (path === '/' || path === '/index.html' || path === '/login.html' || path === '/register.html' || path === '/admin.html') return;
-  // Don't show if dismissed recently (24h)
-  var dismissed = localStorage.getItem('dartnet_install_dismissed');
-  if (dismissed && Date.now() - parseInt(dismissed) < 86400000) return;
+  if (path === '/login.html' || path === '/register.html' || path === '/admin.html') return;
+  // On landing page, only suppress for 4 hours; elsewhere 24 hours
+  var isLanding = (path === '/' || path === '/index.html');
+  var dismissKey = 'dartnet_install_dismissed';
+  var dismissed = localStorage.getItem(dismissKey);
+  var cooldown = isLanding ? 14400000 : 86400000;
+  if (dismissed && Date.now() - parseInt(dismissed) < cooldown) return;
 
   var deferredPrompt = null;
 
@@ -94,5 +97,5 @@
         dismiss();
       }
     });
-  }, 3000);
+  }, isLanding ? 1500 : 3000);
 })();

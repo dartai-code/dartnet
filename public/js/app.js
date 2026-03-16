@@ -171,6 +171,11 @@ function logout() {
   window.location.href = '/login.html';
 }
 
+// Register service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
 // Init common features
 document.addEventListener('DOMContentLoaded', () => {
   initSidebar();
