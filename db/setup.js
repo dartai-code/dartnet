@@ -51,6 +51,9 @@ function initializeDatabase() {
       task_type TEXT,
       verification_type TEXT DEFAULT 'timer',
       timer_seconds INTEGER DEFAULT 30,
+      game_id TEXT,
+      score_field TEXT,
+      score_threshold INTEGER,
       is_active INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -153,7 +156,7 @@ function initializeDatabase() {
   `);
 
   // Create default admin if not exists
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@dartnet.com';
+  const adminEmail = process.env.ADMIN_EMAIL || 'dartaioffcial2@gmail.com';
   const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
   const existingAdmin = db.prepare('SELECT user_id FROM users WHERE email = ?').get(adminEmail);
 
@@ -170,14 +173,34 @@ function initializeDatabase() {
   // Insert sample tasks if none exist
   const taskCount = db.prepare('SELECT COUNT(*) as c FROM tasks').get().c;
   if (taskCount === 0) {
-    const sampleTasks = [
+    // Timer-based tasks: [title, desc, points, link, type, verification, timer]
+    const timerTasks = [
+      ['Join Telegram Community', 'Join our official DartNet Telegram community for updates, support & announcements', 200, 'https://t.me/+6QSJUkIKJwVlYmY1', 'visit', 'timer', 15],
       ['Visit our partner site', 'Visit the sponsor website and stay for 30 seconds', 100, 'https://example.com', 'visit', 'timer', 30],
       ['Watch promo video', 'Watch the full promotional video to earn points', 150, 'https://example.com/video', 'watch', 'timer', 60],
       ['Follow on social media', 'Follow DartNet on social media', 200, 'https://example.com/social', 'visit', 'timer', 15],
     ];
-    const insert = db.prepare('INSERT INTO tasks (task_title, task_description, reward_points, task_link, task_type, verification_type, timer_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)');
-    for (const t of sampleTasks) {
-      insert.run(...t);
+    const insertTimer = db.prepare('INSERT INTO tasks (task_title, task_description, reward_points, task_link, task_type, verification_type, timer_seconds) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    for (const t of timerTasks) {
+      insertTimer.run(...t);
+    }
+
+    // Game-score tasks: [title, desc, points, link, type, verification, game_id, score_field, threshold]
+    const gameTasks = [
+      ['Run For Life — Clear Level 2', 'Survive and complete Level 2 in Run For Life', 30, '/run-for-life.html', 'play', 'game_score', 'run-for-life', 'levelsCompleted', 2],
+      ['Stack Tower — Score 5', 'Stack 5 blocks perfectly in Stack Tower', 40, '/stack-tower.html', 'play', 'game_score', 'stack-tower', 'score', 5],
+      ['Flappy Jump — Score 5', 'Reach a score of 5 in Flappy Jump', 40, '/flappy-jump.html', 'play', 'game_score', 'flappy-jump', 'score', 5],
+      ['Word Scramble — Solve 2 Words', 'Unscramble and solve 2 words in Word Scramble', 50, '/word-scramble.html', 'play', 'game_score', 'word-scramble', 'levelsCompleted', 2],
+      ['Color Switch — Score 8', 'Tap through 8 color gates in Color Switch', 60, '/color-switch.html', 'play', 'game_score', 'color-switch', 'score', 8],
+      ['Shatter — Clear Level 5', 'Break through all blocks and complete Level 5 in Shatter', 70, '/shatter.html', 'play', 'game_score', 'shatter', 'levelsCompleted', 5],
+      ['Snake Evolve — Get 50 Kills', 'Eat your way to 50 kills in Snake Evolve', 80, '/snake-evolve.html', 'play', 'game_score', 'snake-evolve', 'levelsCompleted', 50],
+      ['2048 — Score 2000', 'Merge tiles and reach a score of 2000 in 2048', 90, '/2048.html', 'play', 'game_score', '2048', 'score', 2000],
+      ['Run For Life — Clear Level 5', 'Push your limits and survive to Level 5 in Run For Life', 100, '/run-for-life.html', 'play', 'game_score', 'run-for-life', 'levelsCompleted', 5],
+      ['Shatter — Clear Level 10', 'Master Shatter by completing the tough Level 10', 120, '/shatter.html', 'play', 'game_score', 'shatter', 'levelsCompleted', 10],
+    ];
+    const insertGame = db.prepare('INSERT INTO tasks (task_title, task_description, reward_points, task_link, task_type, verification_type, game_id, score_field, score_threshold) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    for (const t of gameTasks) {
+      insertGame.run(...t);
     }
     console.log('Sample tasks created');
   }

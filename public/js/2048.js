@@ -238,6 +238,11 @@ var T48 = (function () {
       if (data && data.campaignClaim) {
         setTimeout(function () { showToast('\uD83C\uDFC6 Campaign cleared! $' + data.campaignClaim.dollars + ' reward!'); }, 1500);
       }
+      if (data && data.completedTasks && data.completedTasks.length) {
+        data.completedTasks.forEach(function (t, i) {
+          setTimeout(function () { showToast('✅ Task complete: ' + t.title + ' — Claim +' + t.reward + ' pts in Tasks!'); }, 2000 + i * 1500);
+        });
+      }
     }).catch(function () {});
   }
 

@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0a0a1a">
+  <style>
+    .task-ready { border-color: #00ff88 !important; background: rgba(0,255,136,0.05) !important; }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  </style>
 </head>
 <body>
   <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
@@ -79,23 +83,36 @@
         }
 
         list.innerHTML = tasks.map(task => {
-          const completed = task.user_status === 'completed';
+          const status = task.user_status;
+          const completed = status === 'completed';
+          const ready = status === 'ready';
+          const isGameTask = task.verification_type === 'game_score';
           const icon = TASK_ICONS[task.task_type] || 'fas fa-check-circle';
 
+          let actionBtn = '';
+          if (completed) {
+            actionBtn = '<span class="badge badge-approved">Done ✓</span>';
+          } else if (ready) {
+            actionBtn = `<button class="btn btn-primary btn-small" style="background:linear-gradient(135deg,#00ff88,#00cc6a);animation:pulse 1.5s infinite" onclick="claimGameTask(${task.task_id})">Claim 🎁</button>`;
+          } else if (isGameTask) {
+            actionBtn = `<a href="${escapeHtml(task.task_link)}" class="btn btn-small" style="background:rgba(255,255,255,0.08);color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:6px"><i class="fas fa-lock" style="font-size:11px"></i> Play</a>`;
+          } else {
+            actionBtn = `<button class="btn btn-primary btn-small" onclick="startTask(${task.task_id}, '${escapeHtml(task.task_link)}', ${task.timer_seconds || 30})">Start</button>`;
+          }
+
           return `
-            <div class="task-item ${completed ? 'completed' : ''}">
+            <div class="task-item ${completed ? 'completed' : ''} ${ready ? 'task-ready' : ''}">
               <div class="task-icon">
                 <i class="${icon}"></i>
               </div>
               <div class="task-details">
                 <h4>${escapeHtml(task.task_title)}</h4>
                 <p>${escapeHtml(task.task_description || '')}</p>
+                ${ready ? '<span style="color:#00ff88;font-size:12px;font-weight:600">✅ Goal reached — claim your reward!</span>' : ''}
+                ${!completed && !ready && isGameTask ? '<span style="color:var(--text-dim);font-size:12px">🎮 Auto-detects when you hit the target</span>' : ''}
               </div>
               <span class="task-reward-badge">+${task.reward_points} pts</span>
-              ${completed
-                ? '<span class="badge badge-approved">Done ✓</span>'
-                : `<button class="btn btn-primary btn-small" onclick="startTask(${task.task_id}, '${escapeHtml(task.task_link)}', ${task.timer_seconds || 30})">Start</button>`
-              }
+              ${actionBtn}
             </div>
           `;
         }).join('');
@@ -170,6 +187,18 @@
       }
 
       if (overlay) overlay.remove();
+      loadTasks();
+    }
+
+    async function claimGameTask(taskId) {
+      try {
+        const data = await api(`/api/tasks/${taskId}/complete`, { method: 'POST' });
+        if (data) {
+          showToast(`🎉 Task completed! +${data.reward} points`, 'success');
+        }
+      } catch (err) {
+        // Already shown via toast
+      }
       loadTasks();
     }
 

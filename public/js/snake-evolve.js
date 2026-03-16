@@ -970,6 +970,11 @@ var SE = (function () {
       if (data && data.snakeChampion) {
         setTimeout(function () { showToast('🏆 SNAKE CHAMPION! You won $50!'); }, 1500);
       }
+      if (data && data.completedTasks && data.completedTasks.length) {
+        data.completedTasks.forEach(function (t, i) {
+          setTimeout(function () { showToast('✅ Task complete: ' + t.title + ' — Claim +' + t.reward + ' pts in Tasks!'); }, 2000 + i * 1500);
+        });
+      }
     }).catch(function () {});
   }
 

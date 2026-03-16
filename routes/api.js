@@ -197,11 +197,22 @@ router.post('/tasks/:taskId/complete', authenticateToken, (req, res) => {
   }
 
   const existing = db.prepare('SELECT * FROM user_tasks WHERE user_id = ? AND task_id = ?').get(userId, taskId);
-  if (existing) {
-    return res.status(400).json({ error: 'Task already completed.' });
+
+  // For game_score tasks, must be in 'ready' status to claim
+  if (task.verification_type === 'game_score') {
+    if (!existing || existing.status !== 'ready') {
+      return res.status(400).json({ error: 'Task not yet completed. Play the game to unlock it!' });
+    }
+    // Claim the ready task
+    db.prepare('UPDATE user_tasks SET status = ?, completed_at = CURRENT_TIMESTAMP WHERE user_id = ? AND task_id = ?').run('completed', userId, taskId);
+  } else {
+    // Timer-based: original flow
+    if (existing) {
+      return res.status(400).json({ error: 'Task already completed.' });
+    }
+    db.prepare('INSERT INTO user_tasks (user_id, task_id, status, completed_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)').run(userId, taskId, 'completed');
   }
 
-  db.prepare('INSERT INTO user_tasks (user_id, task_id, status, completed_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)').run(userId, taskId, 'completed');
   db.prepare('UPDATE users SET wallet_points = wallet_points + ?, total_earned = total_earned + ? WHERE user_id = ?').run(task.reward_points, task.reward_points, userId);
   db.prepare('INSERT INTO transactions (user_id, type, source, amount, description) VALUES (?, ?, ?, ?, ?)').run(
     userId, 'earn', 'task', task.reward_points, `Completed task: ${task.task_title}`
@@ -318,7 +329,27 @@ router.post('/games/score', authenticateToken, (req, res) => {
     }
   }
 
-  res.json({ message: 'Score saved!', pointsEarned: safePoints, rflChampion, snakeChampion, campaignClaim });
+  // Auto-detect game tasks completion
+  let completedTasks = [];
+  const pendingGameTasks = db.prepare(`
+    SELECT t.task_id, t.task_title, t.reward_points, t.game_id, t.score_field, t.score_threshold
+    FROM tasks t
+    WHERE t.verification_type = 'game_score'
+      AND t.game_id = ?
+      AND t.is_active = 1
+      AND t.task_id NOT IN (SELECT task_id FROM user_tasks WHERE user_id = ?)
+  `).all(gameId, userId);
+
+  for (const task of pendingGameTasks) {
+    const value = task.score_field === 'score' ? (parseInt(score) || 0) : (parseInt(levelsCompleted) || 0);
+    if (value >= task.score_threshold) {
+      // Mark as ready to claim
+      db.prepare('INSERT OR IGNORE INTO user_tasks (user_id, task_id, status) VALUES (?, ?, ?)').run(userId, task.task_id, 'ready');
+      completedTasks.push({ taskId: task.task_id, title: task.task_title, reward: task.reward_points });
+    }
+  }
+
+  res.json({ message: 'Score saved!', pointsEarned: safePoints, rflChampion, snakeChampion, campaignClaim, completedTasks });
 });
 
 // ========================

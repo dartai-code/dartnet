@@ -1152,6 +1152,11 @@ var RFL = (function () {
             }
             if (typeof showToast === 'function') showToast('🏆 CHAMPION #' + data.rflChampion.slot + ' — $100 REWARD!', 'success');
           }
+          if (data && data.completedTasks && data.completedTasks.length) {
+            data.completedTasks.forEach(function (t, i) {
+              setTimeout(function () { if (typeof showToast === 'function') showToast('✅ Task complete: ' + t.title + ' — Claim +' + t.reward + ' pts in Tasks!', 'success'); }, 2000 + i * 1500);
+            });
+          }
         }).catch(function () { /* ignore */ });
       }
     } catch (e) { /* ignore errors */ }
