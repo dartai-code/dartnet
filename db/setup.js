@@ -1,8 +1,11 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 const bcrypt = require('bcryptjs');
 
-const dbPath = path.join(__dirname, '..', 'dartnet.db');
+const dataDir = process.env.DATA_DIR || path.join(__dirname, '..');
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+const dbPath = path.join(dataDir, 'dartnet.db');
 const db = new Database(dbPath);
 
 // Enable WAL mode for better performance
